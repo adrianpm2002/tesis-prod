@@ -1,0 +1,44 @@
+.custom-calendar {
+    border: 1px solid #2b7a0c;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #e2e7e1;
+}
+
+.react-calendar {
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+}
+
+.react-calendar__tile {
+    border-radius: 4px;
+}
+
+/* Estilo para días activos (sin azul) */
+.react-calendar__tile--active {
+    background-color: transparent; /* Sin color de fondo azul */
+    color: #ffffff; /* Color de texto verde oscuro */
+}
+
+/* Estilo para el día actual */
+.react-calendar__tile--now {
+    background-color: #097c5a70; /* Color de fondo suave para el día actual */
+}
+
+/* Cambiar el color del día actual si está seleccionado */
+.react-calendar__tile--active.react-calendar__tile--now {
+    background-color: #1b690c; /* Verde oscuro si el día actual está seleccionado */
+}
+
+/* Estilo para fines de semana (no en rojo) */
+.react-calendar__tile--weekend {
+    background-color: transparent; /* Fondo normal */
+    color: inherit; /* Hereda el color de texto */
+}
+
+/* Hover para días activos */
+.react-calendar__tile--active:enabled:hover {
+    background-color: #1b690c; /* Verde oscuro al pasar el mouse */
+    color: white;
+}

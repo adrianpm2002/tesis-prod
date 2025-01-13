@@ -26,6 +26,17 @@ const Menuitems = [
     icon: IconTypography,
     href: '/zonaCultivo',
   },
+
+  {
+    id: uniqueId(),
+    title: 'Mapa de Cultivos',
+    icon: IconTypography,
+    href: '/mapaCultivo',
+  },
+
+  
+
+
   {
     id: uniqueId(),
     title: 'Historial',

@@ -3,7 +3,7 @@ import { Box, AppBar, Toolbar, styled, Stack, IconButton, Badge, Typography } fr
 import PropTypes from 'prop-types';
 
 // components
-import Profile from './Profile';
+import Profile from './user-profile';
 import { IconBellRinging, IconMenu } from '@tabler/icons-react';
 
 const Header = (props) => {
@@ -62,7 +62,7 @@ const Header = (props) => {
         </IconButton>
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
-          <Typography variant="h6">Nombre del Usuario</Typography>
+          <Typography variant="h6">Adrian Pascual Martinez</Typography>
           <Profile />
         </Stack>
       </ToolbarStyled>

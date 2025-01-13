@@ -13,10 +13,11 @@ const Icons = Loadable(lazy(() => import('../views/icons/Icons')))
 const TypographyPage = Loadable(lazy(() => import('../views/utilities/TypographyPage')))
 const Shadow = Loadable(lazy(() => import('../views/utilities/Shadow')))
 const ZonaCultivo = Loadable(lazy(() => import('../views/utilities/ZonaCult')));
-
+const MapaCultivo = Loadable(lazy(() => import('../views/utilities/MapaCult')));
 const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Register = Loadable(lazy(() => import('../views/authentication/Register')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
+
 
 const Router = [
   {
@@ -28,10 +29,11 @@ const Router = [
       { path: '/sample-page', exact: true, element: <SamplePage /> },
       { path: '/icons', exact: true, element: <Icons /> },
       { path: '/zonaCultivo', exact: true, element: <ZonaCultivo /> },
-      
+      { path: '/mapaCultivo', exact: true, element: <MapaCultivo /> },
       { path: '/ui/typography', exact: true, element: <TypographyPage /> },
       { path: '/ui/shadow', exact: true, element: <Shadow /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
+      
     ],
   },
   {
@@ -42,6 +44,7 @@ const Router = [
       { path: '/auth/register', element: <Register /> },
       { path: '/auth/login', element: <Login /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
+      { path: ''}
     ],
   },
 ];
