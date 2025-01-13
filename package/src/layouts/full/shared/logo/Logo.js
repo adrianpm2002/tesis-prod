@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { styled } from "@mui/material";
-import darkLogo from "src/assets/images/logos/dark-logo.ico"; // Importa el nuevo logo
+import darkLogo from "src/assets/images/logos/logo.png"; // Importa el nuevo logo
 
 const LinkStyled = styled(Link)(() => ({
   height: "70px",
-  width: "180px",
+  width: "200px",
   overflow: "hidden",
   display: "block",
 }));
@@ -13,13 +13,13 @@ const Logo = () => {
   return (
     <LinkStyled
       to="/"
-      height={70}
+      height={90}
       style={{
         display: "flex",
         alignItems: "center",
       }}
     >
-      <img src={darkLogo} alt="Dark Logo" style={{ height: "70px" }} />
+      <img src={darkLogo} alt="Dark Logo" style={{ height: "60px" }} />
     </LinkStyled>
   );
 };

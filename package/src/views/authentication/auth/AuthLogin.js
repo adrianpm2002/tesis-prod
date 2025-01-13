@@ -25,19 +25,19 @@ const AuthLogin = ({ title, subtitle, subtext }) => (
         <Stack>
             <Box>
                 <Typography variant="subtitle1"
-                    fontWeight={600} component="label" htmlFor='username' mb="5px">Username</Typography>
+                    fontWeight={600} component="label" htmlFor='username' mb="5px">Nombre de Usuario</Typography>
                 <CustomTextField id="username" variant="outlined" fullWidth />
             </Box>
             <Box mt="25px">
                 <Typography variant="subtitle1"
-                    fontWeight={600} component="label" htmlFor='password' mb="5px" >Password</Typography>
+                    fontWeight={600} component="label" htmlFor='password' mb="5px" >Contraseña</Typography>
                 <CustomTextField id="password" type="password" variant="outlined" fullWidth />
             </Box>
             <Stack justifyContent="space-between" direction="row" alignItems="center" my={2}>
                 <FormGroup>
                     <FormControlLabel
                         control={<Checkbox defaultChecked />}
-                        label="Remeber this Device"
+                        label="Recordar Contraseña"
                     />
                 </FormGroup>
                 <Typography
@@ -63,7 +63,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => (
                 to="/"
                 type="submit"
             >
-                Sign In
+                Iniciar Sesion
             </Button>
         </Box>
         {subtitle}
