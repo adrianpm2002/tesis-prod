@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { styled } from "@mui/material";
-import darkLogo from "src/assets/images/logos/logo.png"; // Importa el nuevo logo
+import darkLogo from "src/assets/images/logos/LOGO.png"; // Importa el nuevo logo
 
 const LinkStyled = styled(Link)(() => ({
   height: "70px",
