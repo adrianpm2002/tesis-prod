@@ -8,7 +8,8 @@ import {
   IconButton,
   MenuItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Typography
 } from '@mui/material';
 
 import { IconUser } from '@tabler/icons-react';
@@ -50,15 +51,18 @@ const Profile = () => {
         onClose={handleClose}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        sx={{ '& .MuiMenu-paper': { width: '200px' } }}
+        sx={{ '& .MuiMenu-paper': { width: '250px' } }}
       >
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="h6">Adrian Pascual Martinez</Typography>
+          <Typography variant="body2" color="textSecondary">adrian@example.com</Typography>
+        </Box>
         <MenuItem component={Link} to="/user-profile">
           <ListItemIcon>
             <IconUser width={20} />
           </ListItemIcon>
           <ListItemText>Mi perfil</ListItemText>
         </MenuItem>
-        
         <Box mt={1} py={1} px={2}>
           <Button to="/auth/login" variant="outlined" color="primary" component={Link} fullWidth>
             Cerrar Sesion
@@ -70,5 +74,6 @@ const Profile = () => {
 };
 
 export default Profile;
+
 
 

@@ -84,7 +84,7 @@ const Header = ({ toggleMobileSidebar, hasZonas }) => {
             ))
           ) : (
             <MenuItem>
-              <ListItemText primary="No existen notificaciones" />
+              <ListItemText primary="No existen notificaciones." />
             </MenuItem>
           )}
         </Popover>
