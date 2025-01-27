@@ -45,4 +45,6 @@ export default defineConfig({
         setupFiles: './src/setupTests.js',
         css : true,
     },
+
+    plugins: [svgr(), react()],
 });
