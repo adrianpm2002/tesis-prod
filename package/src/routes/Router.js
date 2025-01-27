@@ -17,6 +17,7 @@ const MapaCultivo = Loadable(lazy(() => import('../views/utilities/MapaCult')));
 const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Register = Loadable(lazy(() => import('../views/authentication/Register')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
+const Sensores = Loadable(lazy(() => import('../views/sample-page/Sensores')))
 
 
 const Router = [
@@ -27,6 +28,7 @@ const Router = [
       { path: '/', element: <Navigate to="/dashboard" /> },
       { path: '/dashboard', exact: true, element: <Dashboard /> },
       { path: '/sample-page', exact: true, element: <SamplePage /> },
+      { path: '/sensores', exact: true, element: <Sensores /> },
       { path: '/icons', exact: true, element: <Icons /> },
       { path: '/zonaCultivo', exact: true, element: <ZonaCultivo /> },
       { path: '/mapaCultivo', exact: true, element: <MapaCultivo /> },

@@ -51,7 +51,7 @@ const Menuitems = [
     id: uniqueId(),
     title: 'Sensores',
     icon: IconAperture,
-    href: '/sample-page',
+    href: '/sensores',
   },
 
   {

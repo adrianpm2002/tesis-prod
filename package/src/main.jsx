@@ -8,15 +8,18 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import { ZonaProvider } from './context/ZonaContext'
+import { SensorProvider } from './context/SensorContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <Suspense>
     <ZonaProvider>
-      <BrowserRouter>
-        
+      <SensorProvider>
+        <BrowserRouter>
+
           <App />
 
-      </BrowserRouter>,
+        </BrowserRouter>,
+      </SensorProvider>,
     </ZonaProvider>,
   </Suspense>,
 )
