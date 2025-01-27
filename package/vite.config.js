@@ -3,10 +3,20 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import fs from 'fs/promises';
 import svgr from '@svgr/rollup';
+import { configDefaults } from 'vitest/config';
 // import svgr from 'vite-plugin-svgr'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.js',
+    exclude: [...configDefaults.exclude, 'tests/e2e/*'],
+  },
+
+
     resolve: {
         alias: {
             src: resolve(__dirname, 'src'),
@@ -38,13 +48,7 @@ export default defineConfig({
 
 
     
-    plugins: [react()],
-    test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: './src/setupTests.js',
-        css : true,
-    },
+    
 
-    plugins: [svgr(), react()],
+    
 });
