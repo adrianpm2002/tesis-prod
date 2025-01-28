@@ -21,7 +21,7 @@ const ZonaCultivo = () => {
 
     const handleAddNewZone = () => {
         const today = new Date();
-        const formattedDate = today.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        const formattedDate = today.toISOString().split('T')[0];
 
         const newZone = {
             id: zonas.length + 1,
@@ -36,12 +36,12 @@ const ZonaCultivo = () => {
             humedadMax: '',
             riego: '',
             insumos: '',
-            fechaCultivo: formattedDate, // Establece la fecha de cultivo al día actual
+            fechaCultivo: formattedDate,
             tiempoCultivo: ''
         };
 
         setZonas([...zonas, newZone]);
-        setEditingZone(newZone.id); // Poner en modo edición inmediatamente
+        setEditingZone(newZone.id);
     };
 
     const handleEditZone = (id) => {
@@ -55,7 +55,7 @@ const ZonaCultivo = () => {
 
     const handleChange = (id, field, value) => {
         setZonas(zonas.map(zona => zona.id === id ? { ...zona, [field]: value } : zona));
-        setValidationErrors({ ...validationErrors, [field]: '' }); // Limpiar errores al cambiar el valor
+        setValidationErrors({ ...validationErrors, [field]: '' });
     };
 
     const handleSaveZone = (id) => {
@@ -78,18 +78,18 @@ const ZonaCultivo = () => {
         if (!zona.tiempoCultivo) errors.tiempoCultivo = 'Campo vacío';
 
         if (Object.keys(errors).length === 0) {
-            setEditingZone(null); // Salir del modo edición si no hay errores
+            setEditingZone(null);
         } else {
-            setValidationErrors(errors); // Mostrar errores
+            setValidationErrors(errors);
         }
     };
 
     return (
         <PageContainer title="Zona de Cultivo" description="Gestión de zonas de cultivo">
-            <Grid container spacing={3}>
-                <Grid item sm={12}>
+            <Grid container spacing={2}>
+                <Grid item xs={12}>
                     <DashboardCard title="Zonas de Cultivo">
-                        <Grid container spacing={3} direction="column">
+                        <Grid container spacing={2} direction="column">
                             {zonas.map(zona => (
                                 <Grid item key={zona.id}>
                                     <BlankCard>
@@ -97,7 +97,7 @@ const ZonaCultivo = () => {
                                             <Box
                                                 sx={{
                                                     display: 'flex',
-                                                    flexDirection: 'row',
+                                                    flexDirection: 'column',
                                                     justifyContent: 'space-between',
                                                     alignItems: 'flex-start',
                                                     padding: 2,
@@ -145,7 +145,7 @@ const ZonaCultivo = () => {
                                                             error={!!validationErrors.cantidadPlantas}
                                                             helperText={validationErrors.cantidadPlantas}
                                                         />
-                                                        <Stack direction="row" spacing={1}>
+                                                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                                             <TextField
                                                                 label="Acidez Min"
                                                                 variant="outlined"
@@ -169,7 +169,7 @@ const ZonaCultivo = () => {
                                                                 helperText={validationErrors.acidezMax}
                                                             />
                                                         </Stack>
-                                                        <Stack direction="row" spacing={1}>
+                                                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                                             <TextField
                                                                 label="Temp. Min"
                                                                 variant="outlined"
@@ -193,7 +193,7 @@ const ZonaCultivo = () => {
                                                                 helperText={validationErrors.temperaturaMax}
                                                             />
                                                         </Stack>
-                                                        <Stack direction="row" spacing={1}>
+                                                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                                             <TextField
                                                                 label="Humedad Min"
                                                                 variant="outlined"
@@ -333,16 +333,21 @@ const ZonaCultivo = () => {
                                                 sx={{
                                                     height: '60px',
                                                     width: '100%',
-                                                    fontSize: '1.5rem',
+                                                    fontSize: {
+                                                        xs: '1rem', // Tamaño de fuente para pantallas pequeñas
+                                                        sm: '1.2rem', // Tamaño de fuente para pantallas medianas
+                                                        md: '1.5rem', // Tamaño de fuente para pantallas grandes
+                                                    },
                                                     fontWeight: 'bold',
                                                     backgroundColor: '#4caf50',
                                                     '&:hover': {
                                                         backgroundColor: '#45a049',
-                                                    }
+                                                    },
                                                 }}
                                             >
                                                 Agregar Zona de Cultivo
                                             </Button>
+
                                         </Box>
                                     </CardContent>
                                 </BlankCard>

@@ -1,4 +1,3 @@
-// src/context/ZonaContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ZonaContext = createContext();
@@ -21,8 +20,12 @@ export const ZonaProvider = ({ children }) => {
         setZonas(zonas.filter(zona => zona.id !== id));
     };
 
+    const handleSaveZone = (id, updatedZone) => {
+        setZonas(zonas.map(zona => (zona.id === id ? updatedZone : zona)));
+    };
+
     return (
-        <ZonaContext.Provider value={{ zonas, handleAddZone, handleRemoveZone }}>
+        <ZonaContext.Provider value={{ zonas, handleAddZone, handleRemoveZone, handleSaveZone }}>
             {children}
         </ZonaContext.Provider>
     );

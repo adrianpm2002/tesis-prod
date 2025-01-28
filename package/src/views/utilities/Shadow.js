@@ -113,9 +113,9 @@ const Historial = () => {
                 </Box>
 
                 {/* Contenedor con tabla de datos y sección de registro de fechas */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', overflowY: 'auto' }}>
                     {/* Tabla de datos históricos */}
-                    <TableContainer component={Paper} style={{ backgroundColor: 'white', flexGrow: 1, maxWidth: '60%' }}>
+                    <TableContainer component={Paper} style={{ backgroundColor: 'white', flexGrow: 1, maxWidth: { xs: '100%', md: '60%' }, overflowY: 'auto' }}>
                         <Table>
                             <TableHead>
                                 <TableRow>
@@ -157,7 +157,7 @@ const Historial = () => {
                     </TableContainer>
 
                     {/* Nueva sección "Registro de Fechas" */}
-                    <Box sx={{ width: '40%', padding: 2, height: '300px', backgroundColor: '#f5f5f5', borderRadius:  '3%'}}>
+                    <Box sx={{ width: { xs: '100%', md: '40%' }, padding: 2, height: '300px', backgroundColor: '#f5f5f5', borderRadius: '3%', overflowY: 'auto' }}>
                         <Typography variant="h6">Registro de Fechas</Typography>
                         <Grid container spacing={1}>
                             {last30Days.map((date, index) => {
@@ -168,7 +168,7 @@ const Historial = () => {
                                 const fertilizacion = currentData && currentData.ph < 6;
 
                                 return (
-                                    <Grid item xs={2} key={index}> {/* 6 columnas en total */}
+                                    <Grid item xs={4} sm={2} key={index}> {/* 4 columnas en pantallas pequeñas, 2 en medianas */}
                                         <Box 
                                             sx={{ border: '1px solid #ccc', padding: 1, textAlign: 'center', borderRadius: 1, cursor: 'pointer', position: 'relative', height: '100%' }}
                                         >
@@ -217,7 +217,7 @@ const Historial = () => {
                 />
 
                 {/* Botones para seleccionar el parámetro del gráfico */}
-                <Box sx={{ marginTop: 3, display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ marginTop: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'center' }}>
                     <Button variant={selectedParameter === 'humedad' ? 'contained' : 'outlined'} onClick={() => handleParameterChange('humedad')}>Humedad</Button>
                     <Button variant={selectedParameter === 'temperatura' ? 'contained' : 'outlined'} onClick={() => handleParameterChange('temperatura')}>Temperatura</Button>
                     <Button variant={selectedParameter === 'ph' ? 'contained' : 'outlined'} onClick={() => handleParameterChange('ph')}>pH</Button>
@@ -250,6 +250,7 @@ const Historial = () => {
 };
 
 export default Historial;
+
 
 
 

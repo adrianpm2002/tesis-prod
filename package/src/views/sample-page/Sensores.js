@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Button, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Typography, Button, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, useMediaQuery, Box } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import DashboardCard from '../../components/shared/DashboardCard';
 import { useSensors } from '../../context/SensorContext';
@@ -8,6 +8,7 @@ const Sensores = () => {
   const { sensors, handleAddSensor, handleUpdateSensor, handleRemoveSensor } = useSensors();
   const [isAdding, setIsAdding] = useState(false);
   const [currentSensor, setCurrentSensor] = useState({ id: null, name: '', model: '' });
+  const isSmallScreen = useMediaQuery('(max-width:600px)');
 
   const handleSave = () => {
     if (currentSensor.id) {
@@ -65,30 +66,31 @@ const Sensores = () => {
                 <TableRow key={sensor.id}>
                   <TableCell>
                     {currentSensor.id === sensor.id ? (
-                      <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Nombre del Sensor"
-                        type="text"
-                        fullWidth
-                        value={currentSensor.name}
-                        onChange={(e) => setCurrentSensor({ ...currentSensor, name: e.target.value })}
-                      />
+                      <Box display="flex" flexDirection={isSmallScreen ? "column" : "row"} gap={2}>
+                        <TextField
+                          autoFocus
+                          margin="dense"
+                          label="Nombre del Sensor"
+                          type="text"
+                          fullWidth
+                          value={currentSensor.name}
+                          onChange={(e) => setCurrentSensor({ ...currentSensor, name: e.target.value })}
+                        />
+                        <TextField
+                          margin="dense"
+                          label="Modelo del Sensor"
+                          type="text"
+                          fullWidth
+                          value={currentSensor.model}
+                          onChange={(e) => setCurrentSensor({ ...currentSensor, model: e.target.value })}
+                        />
+                      </Box>
                     ) : (
                       <Typography variant="h6">{sensor.name}</Typography>
                     )}
                   </TableCell>
                   <TableCell>
-                    {currentSensor.id === sensor.id ? (
-                      <TextField
-                        margin="dense"
-                        label="Modelo del Sensor"
-                        type="text"
-                        fullWidth
-                        value={currentSensor.model}
-                        onChange={(e) => setCurrentSensor({ ...currentSensor, model: e.target.value })}
-                      />
-                    ) : (
+                    {currentSensor.id === sensor.id ? null : (
                       <Typography variant="h6">{sensor.model}</Typography>
                     )}
                   </TableCell>
@@ -96,11 +98,7 @@ const Sensores = () => {
                     <Typography variant="body1" style={{ marginBottom: '0.5rem' }}>
                       {sensor.isActive ? 'Encendido' : 'Apagado'}
                     </Typography>
-                    <div
-                      style={{
-                        display: 'inline-block',
-                      }}
-                    >
+                    <div style={{ display: 'inline-block' }}>
                       <input
                         type="checkbox"
                         checked={sensor.isActive}
@@ -112,8 +110,8 @@ const Sensores = () => {
                         htmlFor={`switch-${sensor.id}`}
                         style={{
                           backgroundColor: sensor.isActive ? '#00a878' : '#fe5e41',
-                          width: '4rem',
-                          height: '2rem',
+                          width: isSmallScreen ? '3rem' : '4rem',
+                          height: isSmallScreen ? '1.5rem' : '2rem',
                           borderRadius: '2rem',
                           display: 'inline-block',
                           position: 'relative',
@@ -124,13 +122,13 @@ const Sensores = () => {
                             transition: '.2s',
                             display: 'block',
                             position: 'absolute',
-                            width: '2rem',
-                            height: '2rem',
+                            width: isSmallScreen ? '1.5rem' : '2rem',
+                            height: isSmallScreen ? '1.5rem' : '2rem',
                             backgroundColor: '#fdffff',
                             content: '""',
                             borderRadius: '50%',
                             boxShadow: 'inset 0px 0px 0px 1px #000',
-                            transform: sensor.isActive ? 'translateX(2rem)' : 'translateX(0)',
+                            transform: sensor.isActive ? 'translateX(1.5rem)' : 'translateX(0)',
                           }}
                         ></span>
                       </label>
@@ -162,35 +160,31 @@ const Sensores = () => {
               {isAdding && (
                 <TableRow>
                   <TableCell>
-                    <TextField
-                      autoFocus
-                      margin="dense"
-                      label="Nombre del Sensor"
-                      type="text"
-                      fullWidth
-                      value={currentSensor.name}
-                      onChange={(e) => setCurrentSensor({ ...currentSensor, name: e.target.value })}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      margin="dense"
-                      label="Modelo del Sensor"
-                      type="text"
-                      fullWidth
-                      value={currentSensor.model}
-                      onChange={(e) => setCurrentSensor({ ...currentSensor, model: e.target.value })}
-                    />
+                    <Box display="flex" flexDirection={isSmallScreen ? "column" : "row"} gap={2}>
+                      <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Nombre del Sensor"
+                        type="text"
+                        fullWidth
+                        value={currentSensor.name}
+                        onChange={(e) => setCurrentSensor({ ...currentSensor, name: e.target.value })}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="Modelo del Sensor"
+                        type="text"
+                        fullWidth
+                        value={currentSensor.model}
+                        onChange={(e) => setCurrentSensor({ ...currentSensor, model: e.target.value })}
+                      />
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body1" style={{ marginBottom: '0.5rem' }}>
                       Apagado
                     </Typography>
-                    <div
-                      style={{
-                        display: 'inline-block',
-                      }}
-                    >
+                    <div style={{ display: 'inline-block' }}>
                       <input
                         type="checkbox"
                         disabled
@@ -201,8 +195,8 @@ const Sensores = () => {
                         htmlFor="new-sensor-switch"
                         style={{
                           backgroundColor: '#fe5e41',
-                          width: '4rem',
-                          height: '2rem',
+                          width: isSmallScreen ? '3rem' : '4rem',
+                          height: isSmallScreen ? '1.5rem' : '2rem',
                           borderRadius: '2rem',
                           display: 'inline-block',
                           position: 'relative',
@@ -213,8 +207,8 @@ const Sensores = () => {
                             transition: '.2s',
                             display: 'block',
                             position: 'absolute',
-                            width: '2rem',
-                            height: '2rem',
+                            width: isSmallScreen ? '1.5rem' : '2rem',
+                            height: isSmallScreen ? '1.5rem' : '2rem',
                             backgroundColor: '#fdffff',
                             content: '""',
                             borderRadius: '50%',

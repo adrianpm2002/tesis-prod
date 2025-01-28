@@ -111,17 +111,26 @@ const SamplePage = () => {
                 <Box
                     sx={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gridTemplateColumns: {
+                            xs: 'repeat(1, 1fr)', // 1 columna en pantallas pequeñas
+                            sm: 'repeat(2, 1fr)', // 2 columnas en pantallas medianas
+                            md: 'repeat(3, 1fr)', // 3 columnas en pantallas grandes
+                        },
                         gap: 1,
                         mt: 4,
-                        height: '800px' // Altura total de la casa de cultivo
+                        overflowY: 'auto', // Permitir desplazamiento vertical
+                        maxHeight: '800px', // Altura máxima del contenedor del mapa
                     }}
                 >
                     {/* Sección de cuadrantes pequeños */}
                     <Box
                         sx={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(4, 1fr)',
+                            gridTemplateColumns: {
+                                xs: 'repeat(4, 1fr)', // 4 columnas en pantallas pequeñas
+                                sm: 'repeat(4, 1fr)', // 4 columnas en pantallas medianas
+                                md: 'repeat(4, 1fr)', // 4 columnas en pantallas grandes
+                            },
                             gridTemplateRows: 'repeat(11, 1fr)',
                             gap: 1,
                             border: '1px solid black',
@@ -155,7 +164,11 @@ const SamplePage = () => {
                     <Box
                         sx={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gridTemplateColumns: {
+                                xs: 'repeat(2, 1fr)', // 2 columnas en pantallas pequeñas
+                                sm: 'repeat(3, 1fr)', // 3 columnas en pantallas medianas
+                                md: 'repeat(3, 1fr)', // 3 columnas en pantallas grandes
+                            },
                             gridTemplateRows: 'repeat(8, 1fr)',
                             gap: 1,
                             border: '1px solid black',
@@ -189,7 +202,11 @@ const SamplePage = () => {
                     <Box
                         sx={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
+                            gridTemplateColumns: {
+                                xs: 'repeat(1, 1fr)', // 1 columna en pantallas pequeñas
+                                sm: 'repeat(2, 1fr)', // 2 columnas en pantallas medianas
+                                md: 'repeat(2, 1fr)', // 2 columnas en pantallas grandes
+                            },
                             gridTemplateRows: 'repeat(5, 1fr)',
                             gap: 1,
                             border: '1px solid black',
@@ -225,4 +242,5 @@ const SamplePage = () => {
 };
 
 export default SamplePage;
+
 
