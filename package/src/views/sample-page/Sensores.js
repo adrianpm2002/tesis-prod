@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Button, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, useMediaQuery, Box } from '@mui/material';
+import { Typography, Button, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, useMediaQuery, Box, Grid } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import DashboardCard from '../../components/shared/DashboardCard';
 import { useSensors } from '../../context/SensorContext';
@@ -40,7 +40,7 @@ const Sensores = () => {
   return (
     <PageContainer title="Sensores" description="Vista de sensores registrados">
       <DashboardCard title="Sensores Registrados">
-        <Button variant="contained" color="primary" onClick={() => setIsAdding(true)}>
+        <Button variant="contained" color="primary" onClick={() => setIsAdding(true)} style={{ marginBottom: '1rem' }}>
           Agregar Sensor
         </Button>
         <TableContainer component={Paper}>
@@ -48,16 +48,18 @@ const Sensores = () => {
             <TableHead>
               <TableRow>
                 <TableCell>
-                  <Typography variant="h6">Nombre del Sensor</Typography>
+                  <Typography variant={isSmallScreen ? "body1" : "h6"}>Nombre del Sensor</Typography>
                 </TableCell>
+                {!isSmallScreen && (
+                  <TableCell>
+                    <Typography variant="h6">Modelo</Typography>
+                  </TableCell>
+                )}
                 <TableCell>
-                  <Typography variant="h6">Modelo</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="h6">Estado</Typography>
+                  <Typography variant={isSmallScreen ? "body1" : "h6"}>Estado</Typography>
                 </TableCell>
                 <TableCell align="right">
-                  <Typography variant="h6">Acciones</Typography>
+                  <Typography variant={isSmallScreen ? "body1" : "h6"}>Acciones</Typography>
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -66,34 +68,40 @@ const Sensores = () => {
                 <TableRow key={sensor.id}>
                   <TableCell>
                     {currentSensor.id === sensor.id ? (
-                      <Box display="flex" flexDirection={isSmallScreen ? "column" : "row"} gap={2}>
-                        <TextField
-                          autoFocus
-                          margin="dense"
-                          label="Nombre del Sensor"
-                          type="text"
-                          fullWidth
-                          value={currentSensor.name}
-                          onChange={(e) => setCurrentSensor({ ...currentSensor, name: e.target.value })}
-                        />
-                        <TextField
-                          margin="dense"
-                          label="Modelo del Sensor"
-                          type="text"
-                          fullWidth
-                          value={currentSensor.model}
-                          onChange={(e) => setCurrentSensor({ ...currentSensor, model: e.target.value })}
-                        />
-                      </Box>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            autoFocus
+                            margin="dense"
+                            label="Nombre del Sensor"
+                            type="text"
+                            fullWidth
+                            value={currentSensor.name}
+                            onChange={(e) => setCurrentSensor({ ...currentSensor, name: e.target.value })}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            margin="dense"
+                            label="Modelo del Sensor"
+                            type="text"
+                            fullWidth
+                            value={currentSensor.model}
+                            onChange={(e) => setCurrentSensor({ ...currentSensor, model: e.target.value })}
+                          />
+                        </Grid>
+                      </Grid>
                     ) : (
-                      <Typography variant="h6">{sensor.name}</Typography>
+                      <Typography variant={isSmallScreen ? "body1" : "h6"}>{sensor.name}</Typography>
                     )}
                   </TableCell>
-                  <TableCell>
-                    {currentSensor.id === sensor.id ? null : (
-                      <Typography variant="h6">{sensor.model}</Typography>
-                    )}
-                  </TableCell>
+                  {!isSmallScreen && (
+                    <TableCell>
+                      {currentSensor.id === sensor.id ? null : (
+                        <Typography variant="h6">{sensor.model}</Typography>
+                      )}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Typography variant="body1" style={{ marginBottom: '0.5rem' }}>
                       {sensor.isActive ? 'Encendido' : 'Apagado'}
@@ -137,19 +145,19 @@ const Sensores = () => {
                   <TableCell align="right">
                     {currentSensor.id === sensor.id ? (
                       <>
-                        <Button variant="outlined" color="primary" onClick={handleSave}>
+                        <Button variant="outlined" color="primary" onClick={handleSave} size={isSmallScreen ? "small" : "medium"}>
                           Guardar
                         </Button>
-                        <Button variant="outlined" onClick={handleCancel}>
+                        <Button variant="outlined" onClick={handleCancel} size={isSmallScreen ? "small" : "medium"}>
                           Cancelar
                         </Button>
                       </>
                     ) : (
                       <>
-                        <Button variant="outlined" color="primary" onClick={() => handleEdit(sensor)}>
+                        <Button variant="outlined" color="primary" onClick={() => handleEdit(sensor)} size={isSmallScreen ? "small" : "medium"}>
                           Modificar
                         </Button>
-                        <Button variant="outlined" color="secondary" onClick={() => handleDelete(sensor.id)}>
+                        <Button variant="outlined" color="secondary" onClick={() => handleDelete(sensor.id)} size={isSmallScreen ? "small" : "medium"}>
                           Eliminar
                         </Button>
                       </>
@@ -160,70 +168,76 @@ const Sensores = () => {
               {isAdding && (
                 <TableRow>
                   <TableCell>
-                    <Box display="flex" flexDirection={isSmallScreen ? "column" : "row"} gap={2}>
-                      <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Nombre del Sensor"
-                        type="text"
-                        fullWidth
-                        value={currentSensor.name}
-                        onChange={(e) => setCurrentSensor({ ...currentSensor, name: e.target.value })}
-                      />
-                      <TextField
-                        margin="dense"
-                        label="Modelo del Sensor"
-                        type="text"
-                        fullWidth
-                        value={currentSensor.model}
-                        onChange={(e) => setCurrentSensor({ ...currentSensor, model: e.target.value })}
-                      />
-                    </Box>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          autoFocus
+                          margin="dense"
+                          label="Nombre del Sensor"
+                          type="text"
+                          fullWidth
+                          value={currentSensor.name}
+                          onChange={(e) => setCurrentSensor({ ...currentSensor, name: e.target.value })}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          margin="dense"
+                          label="Modelo del Sensor"
+                          type="text"
+                          fullWidth
+                          value={currentSensor.model}
+                          onChange={(e) => setCurrentSensor({ ...currentSensor, model: e.target.value })}
+                        />
+                      </Grid>
+                    </Grid>
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body1" style={{ marginBottom: '0.5rem' }}>
-                      Apagado
-                    </Typography>
-                    <div style={{ display: 'inline-block' }}>
-                      <input
-                        type="checkbox"
-                        disabled
-                        id="new-sensor-switch"
-                        style={{ display: 'none' }}
-                      />
-                      <label
-                        htmlFor="new-sensor-switch"
-                        style={{
-                          backgroundColor: '#fe5e41',
-                          width: isSmallScreen ? '3rem' : '4rem',
-                          height: isSmallScreen ? '1.5rem' : '2rem',
-                          borderRadius: '2rem',
-                          display: 'inline-block',
-                          position: 'relative',
-                        }}
-                      >
-                        <span
+                  {!isSmallScreen && (
+                    <TableCell>
+                      <Typography variant="body1" style={{ marginBottom: '0.5rem' }}>
+                        Apagado
+                      </Typography>
+                      <div style={{ display: 'inline-block' }}>
+                        <input
+                          type="checkbox"
+                          disabled
+                          id="new-sensor-switch"
+                          style={{ display: 'none' }}
+                        />
+                        <label
+                          htmlFor="new-sensor-switch"
                           style={{
-                            transition: '.2s',
-                            display: 'block',
-                            position: 'absolute',
-                            width: isSmallScreen ? '1.5rem' : '2rem',
+                            backgroundColor: '#fe5e41',
+                            width: isSmallScreen ? '3rem' : '4rem',
                             height: isSmallScreen ? '1.5rem' : '2rem',
-                            backgroundColor: '#fdffff',
-                            content: '""',
-                            borderRadius: '50%',
-                            boxShadow: 'inset 0px 0px 0px 1px #000',
-                            transform: 'translateX(0)',
+                            borderRadius: '2rem',
+                            display: 'inline-block',
+                            position: 'relative',
                           }}
-                        ></span>
-                      </label>
-                    </div>
-                  </TableCell>
+                        >
+                          <span
+                            style={{
+                              transition: '.2s',
+                              display: 'block',
+                              position: 'absolute',
+                              width: isSmallScreen ? '1.5rem' : '2rem',
+                              height: isSmallScreen ? '1.5rem' : '2rem',
+                              backgroundColor: '#fdffff',
+                              content: '""',
+                              borderRadius: '50%',
+                              boxShadow: 'inset 0px 0px 0px 1px #000',
+                              transform: 'translateX(0)',
+                            }}
+                          ></span>
+                        </label>
+                      </div>
+                    </TableCell>
+                  )}
                   <TableCell align="right">
-                    <Button variant="outlined" color="primary" onClick={handleSave}>
+                    <Button variant="outlined" color="primary" onClick={handleSave} size={isSmallScreen ? "small" : "medium"}>
                       Guardar
                     </Button>
-                    <Button variant="outlined" onClick={handleCancel}>
+                    <Button variant="outlined" onClick={handleCancel} size={isSmallScreen ? "small" : "medium"}>
                       Cancelar
                     </Button>
                   </TableCell>
@@ -245,6 +259,7 @@ const Sensores = () => {
 };
 
 export default Sensores;
+
 
 
 
