@@ -8,80 +8,60 @@ import {
   IconButton,
   MenuItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Typography
 } from '@mui/material';
 
-import { IconListCheck, IconMail, IconUser } from '@tabler/icons-react';
+import { IconUser } from '@tabler/icons-react';
 
 import ProfileImg from 'src/assets/images/profile/user-1.jpg';
 
 const Profile = () => {
-  const [anchorEl2, setAnchorEl2] = useState(null);
-  const handleClick2 = (event) => {
-    setAnchorEl2(event.currentTarget);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
   };
-  const handleClose2 = () => {
-    setAnchorEl2(null);
+
+  const handleClose = () => {
+    setAnchorEl(null);
   };
 
   return (
     <Box>
       <IconButton
         size="large"
-        aria-label="show 11 new notifications"
+        aria-label="show profile options"
         color="inherit"
-        aria-controls="msgs-menu"
+        aria-controls="profile-menu"
         aria-haspopup="true"
-        sx={{
-          ...(typeof anchorEl2 === 'object' && {
-            color: 'primary.main',
-          }),
-        }}
-        onClick={handleClick2}
+        onClick={handleClick}
       >
         <Avatar
           src={ProfileImg}
           alt={ProfileImg}
-          sx={{
-            width: 35,
-            height: 35,
-          }}
+          sx={{ width: 35, height: 35 }}
         />
       </IconButton>
-      {/* ------------------------------------------- */}
-      {/* Message Dropdown */}
-      {/* ------------------------------------------- */}
       <Menu
-        id="msgs-menu"
-        anchorEl={anchorEl2}
+        id="profile-menu"
+        anchorEl={anchorEl}
         keepMounted
-        open={Boolean(anchorEl2)}
-        onClose={handleClose2}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        sx={{
-          '& .MuiMenu-paper': {
-            width: '200px',
-          },
-        }}
+        sx={{ '& .MuiMenu-paper': { width: '250px' } }}
       >
-        <MenuItem>
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="h6">Adrian Pascual Martinez</Typography>
+          <Typography variant="body2" color="textSecondary">adrian@example.com</Typography>
+        </Box>
+        <MenuItem component={Link} to="/user-profile">
           <ListItemIcon>
             <IconUser width={20} />
           </ListItemIcon>
           <ListItemText>Mi perfil</ListItemText>
-        </MenuItem>
-        <MenuItem>
-          <ListItemIcon>
-            <IconMail width={20} />
-          </ListItemIcon>
-          <ListItemText>Mis Mensajes</ListItemText>
-        </MenuItem>
-        <MenuItem>
-          <ListItemIcon>
-            <IconListCheck width={20} />
-          </ListItemIcon>
-          <ListItemText>Mis Tareas</ListItemText>
         </MenuItem>
         <Box mt={1} py={1} px={2}>
           <Button to="/auth/login" variant="outlined" color="primary" component={Link} fullWidth>
@@ -94,3 +74,6 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
+
