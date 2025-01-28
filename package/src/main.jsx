@@ -9,17 +9,20 @@ import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import { ZonaProvider } from './context/ZonaContext'
 import { SensorProvider } from './context/SensorContext';
+import { UserProvider } from './context/userContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <Suspense>
     <ZonaProvider>
-      <SensorProvider>
-        <BrowserRouter>
+      <UserProvider>
+        <SensorProvider>
+          <BrowserRouter>
 
-          <App />
+            <App />
 
-        </BrowserRouter>,
-      </SensorProvider>,
+          </BrowserRouter>,
+        </SensorProvider>,
+        </UserProvider>
     </ZonaProvider>,
   </Suspense>,
 )

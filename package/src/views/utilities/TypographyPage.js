@@ -1,268 +1,83 @@
 import React from 'react';
-import { Typography, Grid, CardContent } from '@mui/material';
-import PageContainer from 'src/components/container/PageContainer';
-import DashboardCard from '../../components/shared/DashboardCard';
-import BlankCard from 'src/components/shared/BlankCard';
+import { Container, Typography, Box, TextField, Button, Avatar, MenuItem, FormControl, InputLabel, Select, Grid } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { useUserContext } from '../../context/userContext'; // Importa el contexto
+import Avatar1 from 'src/assets/images/profile/1.jpg';
+import Avatar2 from 'src/assets/images/profile/2.jpg';
+import Avatar3 from 'src/assets/images/profile/3.jpg';
+import Avatar4 from 'src/assets/images/profile/4.jpg';
 
+const UserProfileForm = () => {
+  const { user, setUser } = useUserContext(); // Usa el contexto
+  const navigate = useNavigate();
 
-const TypographyPage = () => {
+  const handleAvatarChange = (selectedAvatar) => {
+    setUser({ ...user, avatar: selectedAvatar });
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log(user);
+    navigate('/dashboard');
+  };
+
   return (
-    <PageContainer title="Typography" description="this is Typography">
-
-      <Grid container spacing={3}>
-        <Grid item sm={12}>
-          <DashboardCard title="Default Text">
-            <Grid container spacing={3}>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h1">h1. Heading</Typography>
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 30 | line-height: 45 | font weight: 500
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h2">h2. Heading</Typography>
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 24 | line-height: 36 | font weight: 500
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h3">h3. Heading</Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 21 | line-height: 31.5 | font weight: 500
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h4">h4. Heading</Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 18 | line-height: 27 | font weight: 500
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h5">h5. Heading</Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 16 | line-height: 24 | font weight: 500
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h6">h6. Heading</Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 14 | line-height: 21 | font weight: 500
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="subtitle1">
-                      subtitle1. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis
-                      tenetur
-                    </Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 16 | line-height: 28 | font weight: 400
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="subtitle2">
-                      subtitle2. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis
-                      tenetur
-                    </Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 14 | line-height: 21 | font weight: 400
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="body1">
-                      body1. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur
-                    </Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 16 | line-height: 24 | font weight: 400
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="body2">
-                      body2. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur
-                    </Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 14 | line-height: 20 | font weight: 400
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="caption">
-                      caption. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis
-                      tenetur
-                    </Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 12 | line-height: 19 | font weight: 400
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="overline">
-                      overline. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis
-                      tenetur
-                    </Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      font size: 12 | line-height: 31 | font weight: 400
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
+    <Container maxWidth="sm">
+      <Box sx={{ mt: 4, textAlign: 'center' }}>
+        <Typography variant="h4">Perfil de Usuario</Typography>
+      </Box>
+      <Box component="form" sx={{ mt: 4 }} onSubmit={handleSubmit}>
+        <TextField 
+          label="Nombre" 
+          variant="outlined" 
+          fullWidth 
+          sx={{ mb: 3 }} 
+          value={user.name} 
+          onChange={(e) => setUser({ ...user, name: e.target.value })} 
+        />
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, justifyContent: 'center' }}>
+          <Avatar src={user.avatar} sx={{ width: 100, height: 100, mr: 2 }} />
+        </Box>
+        <Grid container spacing={2} justifyContent="center" sx={{ mb: 3 }}>
+          {[Avatar1, Avatar2, Avatar3, Avatar4].map((img, index) => (
+            <Grid item key={index}>
+              <Avatar 
+                src={img} 
+                sx={{ width: 60, height: 60, cursor: 'pointer', border: user.avatar === img ? '2px solid blue' : 'none' }} 
+                onClick={() => handleAvatarChange(img)} 
+              />
             </Grid>
-
-          </DashboardCard>
+          ))}
         </Grid>
-        <Grid item sm={12}>
-          <DashboardCard title="Default Text">
-            <Grid container spacing={3}>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h5" color="textprimary">
-                      Text Primary
-                    </Typography>
-
-                    <Typography variant="body1" color="textprimary">
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h5" color="textSecondary">
-                      Text Secondary
-                    </Typography>
-
-                    <Typography variant="body1" color="textSecondary">
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h5" sx={{ color: (theme) => theme.palette.info.main }}>
-                      Text Info
-                    </Typography>
-
-                    <Typography variant="body1" sx={{ color: (theme) => theme.palette.info.main }}>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h5" sx={{ color: (theme) => theme.palette.primary.main }}>
-                      Text Primary
-                    </Typography>
-
-                    <Typography variant="body1" sx={{ color: (theme) => theme.palette.primary.main }}>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h5" sx={{ color: (theme) => theme.palette.warning.main }}>
-                      Text Warning
-                    </Typography>
-
-                    <Typography variant="body1" sx={{ color: (theme) => theme.palette.warning.main }}>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h5" sx={{ color: (theme) => theme.palette.error.main }}>
-                      Text Error
-                    </Typography>
-
-                    <Typography variant="body1" sx={{ color: (theme) => theme.palette.error.main }}>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-              <Grid item sm={12}>
-                <BlankCard>
-                  <CardContent>
-                    <Typography variant="h5" sx={{ color: (theme) => theme.palette.success.main }}>
-                      Text Success
-                    </Typography>
-
-                    <Typography variant="body1" sx={{ color: (theme) => theme.palette.success.main }}>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur
-                    </Typography>
-                  </CardContent>
-                </BlankCard>
-              </Grid>
-            </Grid>
-          </DashboardCard>
-        </Grid>
-      </Grid >
-    </PageContainer>
+        <FormControl variant="outlined" fullWidth sx={{ mb: 3 }}>
+          <InputLabel id="category-select-label">Categoría</InputLabel>
+          <Select 
+            labelId="category-select-label" 
+            label="Categoría" 
+            value={user.category} 
+            onChange={(e) => setUser({ ...user, category: e.target.value })} 
+          >
+            <MenuItem value="especialista">Especialista</MenuItem>
+            <MenuItem value="tecnico">Técnico</MenuItem>
+            <MenuItem value="ingeniero">Ingeniero</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField 
+          label="Correo Electrónico" 
+          variant="outlined" 
+          fullWidth 
+          sx={{ mb: 3 }} 
+          value={user.email} 
+          onChange={(e) => setUser({ ...user, email: e.target.value })} 
+        />
+        <Box sx={{ textAlign: 'center' }}>
+          <Button type="submit" variant="contained" color="primary">
+            Guardar
+          </Button>
+        </Box>
+      </Box>
+    </Container>
   );
 };
 
-export default TypographyPage;
+export default UserProfileForm;

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { styled, Container, Box } from '@mui/material';
 import { Outlet } from 'react-router-dom';
-
+import { useZonas } from '../../context/ZonaContext';
 
 import Header from './header/Header';
 import Sidebar from './sidebar/Sidebar';
@@ -22,15 +22,17 @@ const PageWrapper = styled('div')(() => ({
 }));
 
 const FullLayout = () => {
-
+  const { zonas } = useZonas();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  // const lgUp = useMediaQuery((theme) => theme.breakpoints.up("lg"));
+  const [hasZonas, setHasZonas] = useState(zonas.length > 0);
+
+  useEffect(() => {
+    setHasZonas(zonas.length > 0);
+  }, [zonas]);
 
   return (
-    <MainWrapper
-      className='mainwrapper'
-    >
+    <MainWrapper className='mainwrapper'>
       {/* ------------------------------------------- */}
       {/* Sidebar */}
       {/* ------------------------------------------- */}
@@ -40,13 +42,11 @@ const FullLayout = () => {
       {/* ------------------------------------------- */}
       {/* Main Wrapper */}
       {/* ------------------------------------------- */}
-      <PageWrapper
-        className="page-wrapper"
-      >
+      <PageWrapper className="page-wrapper">
         {/* ------------------------------------------- */}
         {/* Header */}
         {/* ------------------------------------------- */}
-        <Header toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} toggleMobileSidebar={() => setMobileSidebarOpen(true)} />
+        <Header toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} toggleMobileSidebar={() => setMobileSidebarOpen(true)} hasZonas={hasZonas} />
         {/* ------------------------------------------- */}
         {/* PageContent */}
         {/* ------------------------------------------- */}
@@ -71,3 +71,4 @@ const FullLayout = () => {
 };
 
 export default FullLayout;
+

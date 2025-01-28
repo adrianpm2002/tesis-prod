@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, AppBar, Toolbar, styled, Stack, IconButton, Badge, Popover, MenuItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import { IconBellRinging, IconMenu } from '@tabler/icons-react';
 import Profile from './user-profile';
 import PropTypes from 'prop-types';
-import { notifications } from './data'; // Importa las notificaciones
+import { notifications } from './data';
+import { useUserContext } from '../../../context/userContext'; // Importa el contexto
 
 const Header = ({ toggleMobileSidebar, hasZonas }) => {
   const [anchorEl, setAnchorEl] = useState(null);
+  const [randomNotifications, setRandomNotifications] = useState([]);
+  const { user } = useUserContext(); // Usa el contexto
+
+  useEffect(() => {
+    if (hasZonas) {
+      const shuffled = notifications.sort(() => 0.5 - Math.random());
+      setRandomNotifications(shuffled.slice(0, 2));
+    } else {
+      setRandomNotifications([]);
+    }
+  }, [hasZonas]);
 
   const handleNotificationClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -74,7 +86,7 @@ const Header = ({ toggleMobileSidebar, hasZonas }) => {
           sx={{ '& .MuiPopover-paper': { width: '250px', marginLeft: '10px' } }}
         >
           {hasZonas ? (
-            notifications.map((notification, index) => (
+            randomNotifications.map((notification, index) => (
               <MenuItem key={index} sx={{ color: notification.color }}>
                 <ListItemIcon>
                   <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: notification.color, marginRight: 1 }} />
@@ -91,7 +103,7 @@ const Header = ({ toggleMobileSidebar, hasZonas }) => {
 
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
-          <Typography variant="h6">Adrian Pascual Martinez</Typography>
+          <Typography variant="h6">{user.name}</Typography> {/* Muestra el nombre del usuario del contexto */}
           <Profile />
         </Stack>
       </ToolbarStyled>
@@ -105,3 +117,5 @@ Header.propTypes = {
 };
 
 export default Header;
+
+

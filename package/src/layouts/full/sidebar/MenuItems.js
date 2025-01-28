@@ -60,7 +60,12 @@ const Menuitems = [
     icon: IconAperture,
     href: '/sample-page',
   },
-  
+  {
+    id: uniqueId(),
+    title: 'Usuario',
+    icon: IconAperture,
+    href: '/ui/typography',
+  },
 
 
   {
