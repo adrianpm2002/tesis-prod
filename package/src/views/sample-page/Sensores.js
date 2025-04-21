@@ -4,6 +4,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import DashboardCard from '../../components/shared/DashboardCard';
 import { useSensors } from '../../context/SensorContext';
 
+
 const Sensores = () => {
   const { sensors, handleAddSensor, handleUpdateSensor, handleRemoveSensor } = useSensors();
   const [isAdding, setIsAdding] = useState(false);

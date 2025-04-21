@@ -1,4 +1,4 @@
-import React from 'react';
+import React  ,{ useMemo }  from 'react';
 import { Typography, Box, Tooltip } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import DashboardCard from '../../components/shared/DashboardCard';
@@ -36,7 +36,7 @@ const SamplePage = () => {
 
             const zoneColor = colorMap[nombre];
 
-            if (cantidadPlantas >= 10 && cantidadPlantas <= 20) {
+            if (cantidadPlantas > 0 && cantidadPlantas <= 20) {
                 // Asignar cuadrante pequeño
                 for (let i = 0; i < smallQuadrantsArr.length; i++) {
                     if (smallQuadrantsArr[i] === null) {

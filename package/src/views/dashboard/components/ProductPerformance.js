@@ -1,86 +1,134 @@
-import React from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import Chart from 'react-apexcharts';
 import { useTheme } from '@mui/material/styles';
-import { Stack, Typography, Avatar, Fab } from '@mui/material';
-import { IconArrowUpRight } from '@tabler/icons-react';
+import { Stack, Typography, Avatar } from '@mui/material';
+import { IconArrowUpRight, IconArrowDownRight } from '@tabler/icons-react';
 import DashboardCard from '../../../components/shared/DashboardCard';
+import { DataSensorContext } from '../../../context/dataSensorContext';
 
 const ProductPerformance = () => {
-  // chart color
-  const theme = useTheme();
-  const secondary = theme.palette.secondary.main;
-  const secondarylight = '#ffa726';  // Color ajustado para radiación solar
-  const successlight = '#e8f5e9';  // Color ajustado para indicadores de éxito
+  const sensorData = useContext(DataSensorContext);
+  const { radiacionSolar } = sensorData;
+  const [hourlyRadiation, setHourlyRadiation] = useState(Array(24).fill(null));
 
-  // Obtener las últimas 8 horas y los datos de radiación solar
+  useEffect(() => {
+    const currentHour = new Date().getHours();
+    const updatedHourlyRadiation = [...hourlyRadiation];
+    updatedHourlyRadiation[currentHour] = radiacionSolar;
+    setHourlyRadiation(updatedHourlyRadiation);
+  }, [radiacionSolar]);
+
+  const calculateHourlyAverage = () => {
+    const averages = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const radiationValues = hourlyRadiation
+        .filter((value, index) => index === hour && value !== null);
+      const average = radiationValues.length > 0
+        ? (radiationValues.reduce((sum, value) => sum + value, 0) / radiationValues.length).toFixed(2)
+        : null;
+      averages.push(average);
+    }
+    return averages;
+  };
+
   const categories = getLast8Hours();
-  const radiationData = generateRadiationData();
-
-  // Calcular la variación en las últimas dos horas
-  const lastRadiation = radiationData[radiationData.length - 1];
+  const radiationData = calculateHourlyAverage();
+  const currentHour = new Date().getHours();
+  const currentRadiation = radiationData[currentHour] || radiacionSolar;
   const variation = calculateVariation(radiationData);
 
-  // chart
+  const theme = useTheme();
+  const secondary = theme.palette.secondary.main;
+  const secondarylight = '#ffa726';
+  const successlight = '#e8f5e9';
+
   const optionscolumnchart = {
     chart: {
       type: 'area',
       fontFamily: "'Plus Jakarta Sans', sans-serif;",
-      foreColor: '#ffa726',  // Color ajustado para radiación solar
+      foreColor: '#adb0bb',
       toolbar: {
         show: false,
       },
-      height: 200,  // Aumentar la altura del gráfico si es necesario
+      height: 200,
       sparkline: {
-        enabled: true,
+        enabled: false,
       },
-      group: 'sparklines',
     },
     stroke: {
       curve: 'smooth',
       width: 2,
+      colors: [secondary],
     },
     fill: {
-      colors: [secondarylight],
-      type: 'solid',
-      opacity: 0.05,
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.7,
+        opacityTo: 0.3,
+        stops: [0, 80, 100],
+      },
     },
     markers: {
-      size: 0,
+      size: 4,
+      colors: [secondary],
+      strokeColors: secondary,
+      strokeWidth: 2,
     },
     tooltip: {
       theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
+      x: {
+        format: 'HH:mm',
+      },
     },
     xaxis: {
       categories: categories,
-    }
+      labels: {
+        style: {
+          colors: '#adb0bb',
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: '#adb0bb',
+        },
+      },
+    },
+    grid: {
+      show: true,
+      borderColor: '#f1f1f1',
+      strokeDashArray: 3,
+    },
   };
+
   const seriescolumnchart = [
     {
-      name: '',
+      name: 'Radiación Solar (W/m²)',
       color: secondary,
-      data: radiationData,
+      data: getLast8HoursData(radiationData),
     },
   ];
 
   return (
     <DashboardCard
       title="Radiación Solar (W/m²): Sensor de Radiación Solar"
-      action={
-        <Fab color="secondary" size="medium" sx={{ color: '#ffffff' }}>
-          <IconArrowUpRight width={24} />
-        </Fab>
-      }
       footer={
         <Chart options={optionscolumnchart} series={seriescolumnchart} type="area" height="200px" />
       }
     >
       <>
         <Typography variant="h3" fontWeight="700" mt="-20px">
-          {lastRadiation} W/m²
+          {currentRadiation} W/m²
         </Typography>
         <Stack direction="row" spacing={1} my={2} alignItems="center">
           <Avatar sx={{ bgcolor: successlight, width: 27, height: 27 }}>
-            <IconArrowUpRight width={20} color="#66BB6A" />
+            {variation >= 0 ? (
+              <IconArrowUpRight width={20} color="#66BB6A" />
+            ) : (
+              <IconArrowDownRight width={20} color="#f44336" />
+            )}
           </Avatar>
           <Typography variant="subtitle2" fontWeight="600">
             {variation >= 0 ? '+' : ''}{variation} W/m²
@@ -94,49 +142,29 @@ const ProductPerformance = () => {
   );
 };
 
-// Funciones para generar las últimas 8 horas y los datos de radiación solar
-
 function getLast8Hours() {
-    const hours = [];
-    const currentHour = new Date().getHours();
-
-    for (let i = 7; i >= 0; i--) {
-        let hour = (currentHour - i + 24) % 24;  // Asegurarse de que la hora esté en el rango de 0 a 23
-        let label = hour > 9 ? `${hour}:00` : `0${hour}:00`;  // Formatear la hora para que tenga dos dígitos
-        hours.push(label);
-    }
-
-    return hours;
+  const hours = [];
+  const currentHour = new Date().getHours();
+  for (let i = 7; i >= 0; i--) {
+    let hour = (currentHour - i + 24) % 24;
+    hours.push(hour > 9 ? `${hour}:00` : `0${hour}:00`);
+  }
+  return hours;
 }
 
-function generateRadiationData() {
-    const data = [];
-    const currentHour = new Date().getHours();
-
-    for (let i = 7; i >= 0; i--) {
-        let hour = (currentHour - i + 24) % 24;  // Asegurarse de que la hora esté en el rango de 0 a 23
-        
-        let value;
-        if (hour >= 20 || hour < 6) {
-            value = 0;  // De 8 PM a 6 AM, los valores son 0
-        } else if (hour >= 6 && hour <= 14) {
-            value = (hour - 6) * 100;  // De 6 AM a 2 PM, los valores aumentan linealmente
-        } else {
-            value = Math.floor(Math.random() * 100) + 400;  // Otros valores entre 400 y 500
-        }
-
-        data.push(value);
-    }
-
-    return data;
+function getLast8HoursData(data) {
+  const currentHour = new Date().getHours();
+  const last8HoursData = [];
+  for (let i = 7; i >= 0; i--) {
+    last8HoursData.push(data[(currentHour - i + 24) % 24] || 0);
+  }
+  return last8HoursData;
 }
 
 function calculateVariation(data) {
-    if (data.length < 2) return 0;
-    return data[data.length - 1] - data[data.length - 2];
+  if (data.length < 2) return 0;
+  return (data[data.length - 1] - data[data.length - 2]).toFixed(2); // Redondeamos a 2 decimales
 }
 
 export default ProductPerformance;
-
-
 

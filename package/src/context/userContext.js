@@ -1,4 +1,3 @@
-// src/context/userContext.js
 import React, { createContext, useContext, useState } from 'react';
 
 const UserContext = createContext();
@@ -11,6 +10,8 @@ export const UserProvider = ({ children }) => {
     email: 'usuario@example.com',
     category: '',
     avatar: 'src/assets/images/profile/1.jpg', // Ruta de Avatar1
+    province: '', 
+    municipio: '' 
   });
 
   return (
@@ -19,3 +20,4 @@ export const UserProvider = ({ children }) => {
     </UserContext.Provider>
   );
 };
+

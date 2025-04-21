@@ -21,7 +21,7 @@ const Sensores = Loadable(lazy(() => import('../views/sample-page/Sensores')))
 
 
 const Router = [
-  {
+  { 
     path: '/',
     element: <FullLayout />,
     children: [

@@ -32,8 +32,10 @@ const Profile = () => {
         sx={{ '& .MuiMenu-paper': { width: '250px' } }}
       >
         <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="h6">{user.category}</Typography>
           <Typography variant="h6">{user.name}</Typography>
           <Typography variant="body2" color="textSecondary">{user.email}</Typography>
+          <Typography variant="body2" color="textSecondary">{user.province}</Typography>
         </Box>
         <MenuItem component={Link} to='/ui/typography'> {/* Ruta actualizada */}
           <ListItemIcon>

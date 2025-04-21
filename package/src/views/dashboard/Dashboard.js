@@ -53,27 +53,23 @@ const Dashboard = () => {
 
             {selectedZona ? (
               <Grid container spacing={3}>
-                <Grid item xs={12} lg={8}>
-                  <RecentTransactions zonaId={selectedZona} />
+                {/* MonthlyEarnings ocupa todo el ancho y tiene un tamaño más grande */}
+                <Grid item xs={12}>
+                  <MonthlyEarnings zonaId={selectedZona} />
                 </Grid>
-                <Grid item xs={12} lg={4}>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12}>
-                      <MonthlyEarnings zonaId={selectedZona} />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <YearlyBreakup zonaId={selectedZona} />
-                    </Grid>
+
+                {/* Los otros tres componentes se muestran uno al lado del otro */}
+                <Grid item xs={12} container spacing={3}>
+                  <Grid item xs={12} md={4}>
+                    <RecentTransactions zonaId={selectedZona} />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <YearlyBreakup zonaId={selectedZona} />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ProductPerformance zonaId={selectedZona} />
                   </Grid>
                 </Grid>
-                <Grid item xs={12} lg={8}>
-                  <ProductPerformance zonaId={selectedZona} />
-                </Grid>
-                <Grid item xs={12} lg={8}>
-                  <SalesOverview zonaId={selectedZona} />
-                </Grid>
-                <Grid item xs={12} lg={4}></Grid>
-                <Grid container spacing={3}></Grid>
               </Grid>
             ) : (
               <Typography variant="h6" sx={{ color: 'gray', marginTop: 3 }}>
@@ -85,7 +81,7 @@ const Dashboard = () => {
           <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="80vh">
             <img src={Logo} alt="Logo" style={{ width: '200px', marginBottom: '20px' }} />
             <Typography variant="h4" sx={{ color: 'gray', textAlign: 'center', marginBottom: '20px' }}>
-              Bienvenido al Sistema de Monitoreo Agricola
+              Bienvenido al Sistema de Monitoreo Agrícola
             </Typography>
             <Typography variant="body1" sx={{ color: 'gray', textAlign: 'center', marginBottom: '40px' }}>
               Registra una nueva zona de cultivo para comenzar a gestionar tus campos y monitorear los datos de tus cultivos.

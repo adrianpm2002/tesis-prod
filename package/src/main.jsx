@@ -10,6 +10,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ZonaProvider } from './context/ZonaContext'
 import { SensorProvider } from './context/SensorContext';
 import { UserProvider } from './context/userContext';
+import { DataSensorProvider } from './context/dataSensorContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <Suspense>
@@ -17,12 +18,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <UserProvider>
         <SensorProvider>
           <BrowserRouter>
+            <DataSensorProvider>
 
-            <App />
+              <App />
 
+            </DataSensorProvider>
           </BrowserRouter>,
         </SensorProvider>,
-        </UserProvider>
+      </UserProvider>
     </ZonaProvider>,
   </Suspense>,
 )
