@@ -1,4 +1,4 @@
-import React  ,{ useMemo }  from 'react';
+import React from 'react';
 import { Typography, Box, Tooltip } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import DashboardCard from '../../components/shared/DashboardCard';
@@ -12,13 +12,37 @@ const greenColors = [
 ];
 
 const SamplePage = () => {
-    const { zonas } = useZonas(); // Obtenemos las zonas de cultivo
+    const { zonas } = useZonas();
 
     // Mapa para asignar colores a zonas
     const colorMap = {};
     let colorIndex = 0;
+    
+    // Función corregida para calcular días de cultivo y fecha de cosecha
+    const getCultivoInfo = (zona) => {
+        if (!zona || !zona.fechaCultivo) return { 
+            diasTranscurridos: 0, 
+            tiempoRestante: 0,
+            cosecha: 'No disponible' 
+        };
+        
+        const fechaSiembra = new Date(zona.fechaCultivo);
+        const hoy = new Date();
+        const diasTranscurridos = Math.floor((hoy - fechaSiembra) / (1000 * 60 * 60 * 24));
+        const tiempoCultivo = parseInt(zona.tiempoCultivo) || 0;
+        
+        const fechaCosecha = new Date(fechaSiembra);
+        fechaCosecha.setDate(fechaSiembra.getDate() + tiempoCultivo);
+        
+        return {
+            diasTranscurridos: diasTranscurridos > 0 ? diasTranscurridos : 0,
+            tiempoRestante: Math.max(0, tiempoCultivo - diasTranscurridos),
+            cosecha: fechaCosecha.toLocaleDateString(),
+            fechaSiembra: fechaSiembra.toLocaleDateString()
+        };
+    };
 
-    // Función para asignar cuadrantes según la cantidad de plantas
+    // Función para asignar cuadrantes
     const assignQuadrants = () => {
         const assignedQuadrants = [];
         const smallQuadrantsArr = Array(44).fill(null); 
@@ -28,7 +52,6 @@ const SamplePage = () => {
         zonas.forEach(zona => {
             const { nombre, cantidadPlantas } = zona;
 
-            // Asignar color a la zona si no tiene uno ya asignado
             if (!colorMap[nombre]) {
                 colorMap[nombre] = greenColors[colorIndex % greenColors.length];
                 colorIndex++;
@@ -37,62 +60,56 @@ const SamplePage = () => {
             const zoneColor = colorMap[nombre];
 
             if (cantidadPlantas > 0 && cantidadPlantas <= 20) {
-                // Asignar cuadrante pequeño
                 for (let i = 0; i < smallQuadrantsArr.length; i++) {
                     if (smallQuadrantsArr[i] === null) {
-                        smallQuadrantsArr[i] = { nombre, cantidadPlantas, color: zoneColor };
+                        smallQuadrantsArr[i] = { ...zona, color: zoneColor };
                         assignedQuadrants.push({ index: i, size: 'small', name: nombre, color: zoneColor });
-                        break; // Solo se asigna un cuadrante
+                        break;
                     }
                 }
             } else if (cantidadPlantas > 20 && cantidadPlantas <= 40) {
-                // Asignar cuadrante mediano
                 for (let i = 0; i < mediumQuadrantsArr.length; i++) {
                     if (mediumQuadrantsArr[i] === null) {
-                        mediumQuadrantsArr[i] = { nombre, cantidadPlantas, color: zoneColor };
+                        mediumQuadrantsArr[i] = { ...zona, color: zoneColor };
                         assignedQuadrants.push({ index: i, size: 'medium', name: nombre, color: zoneColor });
-                        break; // Solo se asigna un cuadrante
+                        break;
                     }
                 }
             } else if (cantidadPlantas > 40 && cantidadPlantas <= 100) {
-                // Asignar cuadrante grande
                 for (let i = 0; i < largeQuadrantsArr.length; i++) {
                     if (largeQuadrantsArr[i] === null) {
-                        largeQuadrantsArr[i] = { nombre, cantidadPlantas, color: zoneColor };
+                        largeQuadrantsArr[i] = { ...zona, color: zoneColor };
                         assignedQuadrants.push({ index: i, size: 'large', name: nombre, color: zoneColor });
-                        break; // Solo se asigna un cuadrante
+                        break;
                     }
                 }
             } else if (cantidadPlantas > 100) {
-                // Asignar cuadrantes grandes hasta llenar
                 let remainingPlants = cantidadPlantas;
 
                 for (let i = 0; i < largeQuadrantsArr.length; i++) {
                     if (largeQuadrantsArr[i] === null && remainingPlants > 0) {
-                        largeQuadrantsArr[i] = { nombre, cantidadPlantas, color: zoneColor };
+                        largeQuadrantsArr[i] = { ...zona, color: zoneColor };
                         assignedQuadrants.push({ index: i, size: 'large', name: nombre, color: zoneColor });
-                        remainingPlants -= 100; // Cada cuadrante grande puede contener hasta 100 plantas
+                        remainingPlants -= 100;
                     }
                 }
 
-                // Si quedan plantas, asignar cuadrantes medianos
                 if (remainingPlants > 0) {
                     for (let i = 0; i < mediumQuadrantsArr.length; i++) {
                         if (mediumQuadrantsArr[i] === null && remainingPlants > 0) {
-                            mediumQuadrantsArr[i] = { nombre, cantidadPlantas, color: zoneColor };
+                            mediumQuadrantsArr[i] = { ...zona, color: zoneColor };
                             assignedQuadrants.push({ index: i, size: 'medium', name: nombre, color: zoneColor });
-                            remainingPlants -= 40; // Cada cuadrante mediano puede contener hasta 40 plantas
+                            remainingPlants -= 40;
                         }
                     }
                 }
 
-                // Si aún quedan plantas, asignar cuadrantes pequeños
                 if (remainingPlants > 0) {
                     for (let i = 0; i < smallQuadrantsArr.length; i++) {
                         if (smallQuadrantsArr[i] === null && remainingPlants > 0) {
-                            smallQuadrantsArr[i] = { nombre, cantidadPlantas, color: zoneColor };
+                            smallQuadrantsArr[i] = { ...zona, color: zoneColor };
                             assignedQuadrants.push({ index: i, size: 'small', name: nombre, color: zoneColor });
-                            remainingPlants -= 20; // Cada cuadrante pequeño puede contener hasta 20 plantas
+                            remainingPlants -= 20;
                         }
                     }
                 }
@@ -102,145 +119,124 @@ const SamplePage = () => {
         return { assignedQuadrants, smallQuadrantsArr, mediumQuadrantsArr, largeQuadrantsArr };
     };
 
-    const { assignedQuadrants, smallQuadrantsArr, mediumQuadrantsArr, largeQuadrantsArr } = assignQuadrants();
+    const { smallQuadrantsArr, mediumQuadrantsArr, largeQuadrantsArr } = assignQuadrants();
+
+    // Componente para renderizar cuadrantes
+    const renderQuadrant = (quadrant, index, size) => {
+        const cultivoInfo = getCultivoInfo(quadrant);
+        return (
+            <Tooltip
+                key={index}
+                title={
+                    quadrant ? (
+                        <div>
+                            <div><strong>Zona:</strong> {quadrant.nombre}</div>
+                            <div><strong>Plantas:</strong> {quadrant.cantidadPlantas}</div>
+                            <div><strong>Fecha de siembra:</strong> {cultivoInfo.fechaSiembra}</div>
+                            <div><strong>Días transcurridos:</strong> {cultivoInfo.diasTranscurridos}</div>
+                            <div><strong>Tiempo de cultivo:</strong> {quadrant.tiempoCultivo} días</div>
+                            <div><strong>Días restantes:</strong> {cultivoInfo.tiempoRestante}</div>
+                            <div><strong>Fecha estimada de cosecha:</strong> {cultivoInfo.cosecha}</div>
+                        </div>
+                    ) : `Cuadrante ${size} #${index + 1} - Disponible`
+                }
+                arrow
+            >
+                <Box
+                    sx={{
+                        backgroundColor: quadrant ? quadrant.color : '#c3a698',
+                        border: '1px solid #000',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: size === 'small' ? '32px' : 'auto',
+                        color: quadrant ? 'black' : 'transparent',
+                        transition: 'transform 0.2s',
+                        '&:hover': {
+                            transform: 'scale(1.1)',
+                            zIndex: 1,
+                            boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+                        }
+                    }}
+                >
+                    {quadrant ? quadrant.nombre : index + 1}
+                </Box>
+            </Tooltip>
+        );
+    };
 
     return (
-        <PageContainer title="Casa de Cultivo" description="Mapa de la casa de cultivo de 200 metros cuadrados">
+        <PageContainer title="Casa de Cultivo" description="Mapa de la casa de cultivo">
             <DashboardCard title="Mapa de la Casa de Cultivo">
-                <Typography>Casa de Cultivo de 20m x 10m dividida en cuadrantes</Typography>
                 <Box
                     sx={{
                         display: 'grid',
                         gridTemplateColumns: {
-                            xs: 'repeat(1, 1fr)', // 1 columna en pantallas pequeñas
-                            sm: 'repeat(2, 1fr)', // 2 columnas en pantallas medianas
-                            md: 'repeat(3, 1fr)', // 3 columnas en pantallas grandes
+                            xs: 'repeat(1, 1fr)',
+                            sm: 'repeat(2, 1fr)',
+                            md: 'repeat(3, 1fr)',
                         },
                         gap: 1,
                         mt: 4,
-                        overflowY: 'auto', // Permitir desplazamiento vertical
-                        maxHeight: '800px', // Altura máxima del contenedor del mapa
+                        overflowY: 'auto',
+                        maxHeight: '800px',
                     }}
                 >
-                    {/* Sección de cuadrantes pequeños */}
+                    {/* Cuadrantes pequeños */}
                     <Box
                         sx={{
                             display: 'grid',
-                            gridTemplateColumns: {
-                                xs: 'repeat(4, 1fr)', // 4 columnas en pantallas pequeñas
-                                sm: 'repeat(4, 1fr)', // 4 columnas en pantallas medianas
-                                md: 'repeat(4, 1fr)', // 4 columnas en pantallas grandes
-                            },
+                            gridTemplateColumns: 'repeat(4, 1fr)',
                             gridTemplateRows: 'repeat(11, 1fr)',
                             gap: 1,
                             border: '1px solid black',
                             p: 1,
-                            height: '100%', // Ajuste para abarcar toda la sección
+                            height: '100%',
                         }}
                     >
-                        {smallQuadrantsArr.map((quadrant, index) => (
-                            <Tooltip
-                                key={index}
-                                title={quadrant ? `${quadrant.nombre} - ${quadrant.cantidadPlantas} plantas` : ''}
-                                arrow
-                            >
-                                <Box
-                                    sx={{
-                                        backgroundColor: quadrant ? quadrant.color : '#c3a698',
-                                        border: '1px solid #000',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: quadrant ? 'black' : 'transparent', // Solo mostrar texto si hay un cultivo
-                                    }}
-                                >
-                                    {quadrant ? quadrant.nombre : index + 1}
-                                </Box>
-                            </Tooltip>
-                        ))}
+                        {smallQuadrantsArr.map((quadrant, index) => 
+                            renderQuadrant(quadrant, index, 'small')
+                        )}
                     </Box>
 
-                    {/* Sección de cuadrantes medianos */}
+                    {/* Cuadrantes medianos */}
                     <Box
                         sx={{
                             display: 'grid',
-                            gridTemplateColumns: {
-                                xs: 'repeat(2, 1fr)', // 2 columnas en pantallas pequeñas
-                                sm: 'repeat(3, 1fr)', // 3 columnas en pantallas medianas
-                                md: 'repeat(3, 1fr)', // 3 columnas en pantallas grandes
-                            },
+                            gridTemplateColumns: 'repeat(3, 1fr)',
                             gridTemplateRows: 'repeat(8, 1fr)',
                             gap: 1,
                             border: '1px solid black',
                             p: 1,
-                            height: '100%', // Ajuste para abarcar toda la sección
+                            height: '100%',
                         }}
                     >
-                        {mediumQuadrantsArr.map((quadrant, index) => (
-                            <Tooltip
-                                key={index}
-                                title={quadrant ? `${quadrant.nombre} - ${quadrant.cantidadPlantas} plantas` : ''}
-                                arrow
-                            >
-                                <Box
-                                    sx={{
-                                        backgroundColor: quadrant ? quadrant.color : '#c3a698',
-                                        border: '1px solid #000',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: quadrant ? 'black' : 'transparent', // Solo mostrar texto si hay un cultivo
-                                    }}
-                                >
-                                    {quadrant ? quadrant.nombre : index + 1}
-                                </Box>
-                            </Tooltip>
-                        ))}
+                        {mediumQuadrantsArr.map((quadrant, index) => 
+                            renderQuadrant(quadrant, index, 'medium')
+                        )}
                     </Box>
 
-                    {/* Sección de cuadrantes grandes */}
+                    {/* Cuadrantes grandes */}
                     <Box
                         sx={{
                             display: 'grid',
-                            gridTemplateColumns: {
-                                xs: 'repeat(1, 1fr)', // 1 columna en pantallas pequeñas
-                                sm: 'repeat(2, 1fr)', // 2 columnas en pantallas medianas
-                                md: 'repeat(2, 1fr)', // 2 columnas en pantallas grandes
-                            },
+                            gridTemplateColumns: 'repeat(2, 1fr)',
                             gridTemplateRows: 'repeat(5, 1fr)',
                             gap: 1,
                             border: '1px solid black',
                             p: 1,
-                            height: '100%', // Ajuste para abarcar toda la sección
+                            height: '100%',
                         }}
                     >
-                        {largeQuadrantsArr.map((quadrant, index) => (
-                            <Tooltip
-                                key={index}
-                                title={quadrant ? `${quadrant.nombre} - ${quadrant.cantidadPlantas} plantas` : ''}
-                                arrow
-                            >
-                                <Box
-                                    sx={{
-                                        backgroundColor: quadrant ? quadrant.color : '#c3a698',
-                                        border: '1px solid #000',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: quadrant ? 'black' : 'transparent', // Solo mostrar texto si hay un cultivo
-                                    }}
-                                >
-                                    {quadrant ? quadrant.nombre : index + 1}
-                                </Box>
-                            </Tooltip>
-                        ))}
+                        {largeQuadrantsArr.map((quadrant, index) => 
+                            renderQuadrant(quadrant, index, 'large')
+                        )}
                     </Box>
                 </Box>
+                <Typography>Casa de Cultivo de 20m x 10m dividida en cuadrantes</Typography>
             </DashboardCard>
         </PageContainer>
     );
 };
 
 export default SamplePage;
-
-
