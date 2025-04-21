@@ -18,7 +18,7 @@ const SamplePage = () => {
     const colorMap = {};
     let colorIndex = 0;
     
-    // Función corregida para calcular días de cultivo y fecha de cosecha
+    // Función corregida para calcular días de cultivo y fecha de cosechas
     const getCultivoInfo = (zona) => {
         if (!zona || !zona.fechaCultivo) return { 
             diasTranscurridos: 0, 
