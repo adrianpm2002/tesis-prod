@@ -11,6 +11,7 @@ import { ZonaProvider } from './context/ZonaContext'
 import { SensorProvider } from './context/SensorContext';
 import { UserProvider } from './context/userContext';
 import { DataSensorProvider } from './context/dataSensorContext';
+import { ActivitiesProvider } from './context/ActivitiesContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <Suspense>
@@ -18,11 +19,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <UserProvider>
         <SensorProvider>
           <BrowserRouter>
-            <DataSensorProvider>
+            <ActivitiesProvider>
+              <DataSensorProvider>
 
-              <App />
+                <App />
 
-            </DataSensorProvider>
+              </DataSensorProvider>
+            </ActivitiesProvider>
           </BrowserRouter>,
         </SensorProvider>,
       </UserProvider>

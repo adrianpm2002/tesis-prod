@@ -1,6 +1,7 @@
 import React, { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import Loadable from '../layouts/full/shared/loadable/Loadable';
+import Calendar from 'react-calendar';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -18,6 +19,8 @@ const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Register = Loadable(lazy(() => import('../views/authentication/Register')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const Sensores = Loadable(lazy(() => import('../views/sample-page/Sensores')))
+const TablaMesual = Loadable(lazy(() => import('../views/utilities/TablaMensual')));
+const Calendario = Loadable(lazy(() => import('../views/utilities/Calendario')));
 
 
 const Router = [
@@ -32,6 +35,8 @@ const Router = [
       { path: '/icons', exact: true, element: <Icons /> },
       { path: '/zonaCultivo', exact: true, element: <ZonaCultivo /> },
       { path: '/mapaCultivo', exact: true, element: <MapaCultivo /> },
+      { path: '/tabla', exact: true, element: <TablaMesual /> },
+      { path: '/calendario', exact: true, element: <Calendario /> },
       { path: '/ui/typography', exact: true, element: <TypographyPage /> },
       { path: '/ui/shadow', exact: true, element: <Shadow /> },
       { path: '*', element: <Navigate to="/auth/404" /> },

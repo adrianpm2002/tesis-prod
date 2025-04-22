@@ -38,10 +38,26 @@ const Menuitems = [
 
 
   {
+    navlabel: true,
+    subheader: 'Historial',
+  },
+  {
     id: uniqueId(),
-    title: 'Historial',
+    title: 'Tabla Mensual',
     icon: IconCopy,
-    href: '/ui/shadow',
+    href: '/tabla',
+  },
+  {
+    id: uniqueId(),
+    title: 'Calendario de Actividades',
+    icon: IconCopy,
+    href: '/calendario',
+  },
+  {
+    id: uniqueId(),
+    title: 'Gráficos de Tendencias',
+    icon: IconCopy,
+    href: '/historial/graficos',
   },
   {
     navlabel: true,
