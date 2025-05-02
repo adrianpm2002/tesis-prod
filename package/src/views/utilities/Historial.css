@@ -1,44 +1,171 @@
-.custom-calendar {
-    border: 1px solid #2b7a0c;
-    border-radius: 8px;
-    padding: 10px;
-    background-color: #e2e7e1;
-}
-
+/* Estilos base del calendario */
 .react-calendar {
-    width: 100%;
-    max-width: 400px;
-    margin: auto;
+  width: 100%;
+  max-width: 800px;
+  font-family: Arial, sans-serif;
+  font-size: 1.1rem;
+  background-color: #f5fff5;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 128, 0, 0.2);
 }
 
 .react-calendar__tile {
-    border-radius: 4px;
+  padding: 20px !important;
+  border-radius: 10px;
+  position: relative;
+  height: 80px;
 }
 
-/* Estilo para días activos (sin azul) */
-.react-calendar__tile--active {
-    background-color: transparent; /* Sin color de fondo azul */
-    color: #ffffff; /* Color de texto verde oscuro */
+/* Día de siembra - verde fuerte */
+.siembra-day {
+  background-color: #4caf50 !important;
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Día de cosecha - azul oscuro */
+.cosecha-day {
+  background-color: #1a237e !important;
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Días entre siembra y cosecha - verde claro tipo sombra */
+.entre-dias {
+  background-color: #d0f0c0 !important;
+  color: #2e7d32 !important;
+  font-weight: 500;
 }
 
 /* Estilo para el día actual */
-.react-calendar__tile--now {
-    background-color: #097c5a70; /* Color de fondo suave para el día actual */
+.current-day {
+  background-color: #d0f0c0 !important;
+  color: #2e7d32 !important;
+  font-weight: 500;
+  border: 5px solid #ffc107 !important;
+  position: relative;
 }
 
-/* Cambiar el color del día actual si está seleccionado */
-.react-calendar__tile--active.react-calendar__tile--now {
-    background-color: #1b690c; /* Verde oscuro si el día actual está seleccionado */
+/* Tooltip para el día actual */
+.react-calendar__tile.current-day:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+  min-width: 120px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-/* Estilo para fines de semana (no en rojo) */
-.react-calendar__tile--weekend {
-    background-color: transparent; /* Fondo normal */
-    color: inherit; /* Hereda el color de texto */
+/* Flecha del tooltip */
+.react-calendar__tile.current-day:hover::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+  z-index: 101;
+  pointer-events: none;
 }
 
-/* Hover para días activos */
-.react-calendar__tile--active:enabled:hover {
-    background-color: #1b690c; /* Verde oscuro al pasar el mouse */
-    color: white;
+/* Días deshabilitados (pasados) */
+.disabled-day {
+  background-color: #f5f5f5 !important;
+  color: #bdbdbd !important;
+  cursor: not-allowed !important;
 }
+
+/* Contenedor de puntos de actividad */
+.activity-dots-container {
+  position: absolute;
+  bottom: 5px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+}
+
+/* Puntos de actividad */
+.activity-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.activity-dot:hover {
+  transform: scale(1.3);
+}
+
+/* Tooltip personalizado */
+.react-calendar__tile abbr {
+  border-bottom: none !important;
+  text-decoration: none !important;
+}
+
+/* Mejoras de accesibilidad */
+.react-calendar__navigation button:disabled {
+  background-color: #e0e0e0;
+}
+
+.react-calendar__tile--active {
+  background-color: #006edc;
+  color: white;
+}
+
+/* Indicadores de actividad */
+.activity-indicators {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.activity-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.activity-dot svg {
+  width: 12px;
+  height: 12px;
+}
+
+.special-day-icon {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tooltip-wrapper {
+  width: 100%;
+  height: 100%;
+}
+

@@ -57,7 +57,7 @@ const Menuitems = [
     id: uniqueId(),
     title: 'Gráficos de Tendencias',
     icon: IconCopy,
-    href: '/historial/graficos',
+    href: '/graficos',
   },
   {
     navlabel: true,
