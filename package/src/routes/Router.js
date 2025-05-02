@@ -21,6 +21,7 @@ const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const Sensores = Loadable(lazy(() => import('../views/sample-page/Sensores')))
 const TablaMesual = Loadable(lazy(() => import('../views/utilities/TablaMensual')));
 const Calendario = Loadable(lazy(() => import('../views/utilities/Calendario')));
+const GraficoTendencia = Loadable(lazy(() => import('../views/utilities/GraficoTendencia')));
 
 
 const Router = [
@@ -37,6 +38,7 @@ const Router = [
       { path: '/mapaCultivo', exact: true, element: <MapaCultivo /> },
       { path: '/tabla', exact: true, element: <TablaMesual /> },
       { path: '/calendario', exact: true, element: <Calendario /> },
+      { path: '/graficos', exact: true, element: <GraficoTendencia /> },
       { path: '/ui/typography', exact: true, element: <TypographyPage /> },
       { path: '/ui/shadow', exact: true, element: <Shadow /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
