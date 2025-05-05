@@ -1,12 +1,23 @@
-// src/context/SensorContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const SensorContext = createContext();
 
 export const SensorProvider = ({ children }) => {
     const [sensors, setSensors] = useState(() => {
-        const savedSensors = localStorage.getItem('sensors');
-        return savedSensors ? JSON.parse(savedSensors) : [];
+        try {
+            const savedSensors = localStorage.getItem('sensors');
+            if (savedSensors) {
+                const parsed = JSON.parse(savedSensors);
+                // Filtramos cualquier dato basura que no tenga los campos requeridos
+                return parsed.filter(sensor => 
+                    sensor.id && sensor.type && sensor.model
+                );
+            }
+            return [];
+        } catch (error) {
+            console.error("Error al cargar sensores:", error);
+            return [];
+        }
     });
 
     useEffect(() => {
@@ -14,19 +25,27 @@ export const SensorProvider = ({ children }) => {
     }, [sensors]);
 
     const handleAddSensor = (sensor) => {
-        setSensors([...sensors, { ...sensor, id: sensors.length + 1 }]);
+        // Usamos Date.now() para un ID más único que length+1
+        setSensors(prev => [...prev, { ...sensor, id: Date.now() }]);
     };
 
     const handleUpdateSensor = (updatedSensor) => {
-        setSensors(sensors.map(sensor => (sensor.id === updatedSensor.id ? updatedSensor : sensor)));
+        setSensors(prev => 
+            prev.map(sensor => (sensor.id === updatedSensor.id ? updatedSensor : sensor))
+        );
     };
 
     const handleRemoveSensor = (id) => {
-        setSensors(sensors.filter(sensor => sensor.id !== id));
+        setSensors(prev => prev.filter(sensor => sensor.id !== id));
     };
 
     return (
-        <SensorContext.Provider value={{ sensors, handleAddSensor, handleUpdateSensor, handleRemoveSensor }}>
+        <SensorContext.Provider value={{ 
+            sensors, 
+            handleAddSensor, 
+            handleUpdateSensor, 
+            handleRemoveSensor 
+        }}>
             {children}
         </SensorContext.Provider>
     );
