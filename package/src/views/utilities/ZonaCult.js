@@ -16,6 +16,7 @@ import {
     Modal,
     TextField,
     Grid,
+    TablePagination,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -24,6 +25,7 @@ import {
     getCoreRowModel,
     flexRender,
     createColumnHelper,
+    getPaginationRowModel,
 } from '@tanstack/react-table';
 import { useZonas } from '../../context/ZonaContext';
 import PageContainer from 'src/components/container/PageContainer';
@@ -436,8 +438,14 @@ const ZonaCultivo = () => {
 
     const table = useReactTable({
         data: zonas,
-        columns,
+        columns, // las columnas definidas anteriormente
         getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        initialState: {
+            pagination: {
+                pageSize: 5, // Tamaño de página por defecto
+            },
+        },
     });
 
     return (
@@ -473,6 +481,20 @@ const ZonaCultivo = () => {
                                 ))}
                             </TableBody>
                         </Table>
+                        {/* Paginación */}
+                        <TablePagination
+                            rowsPerPageOptions={[5, 10, 25]}
+                            component="div"
+                            count={zonas.length}
+                            rowsPerPage={table.getState().pagination.pageSize}
+                            page={table.getState().pagination.pageIndex}
+                            onPageChange={(_, page) => table.setPageIndex(page)}
+                            onRowsPerPageChange={(e) => {
+                                table.setPageSize(Number(e.target.value));
+                            }}
+                            labelRowsPerPage="Filas por página:"
+                            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+                        />
                     </TableContainer>
                 </Stack>
             </DashboardCard>
