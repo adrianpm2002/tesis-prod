@@ -49,7 +49,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => (
                         color: 'primary.main',
                     }}
                 >
-                    Forgot Password ?
+                    Recuperar Contraseña ?
                 </Typography>
             </Stack>
         </Stack>

@@ -450,11 +450,15 @@ const ZonaCultivo = () => {
 
     return (
         <PageContainer title="Zona de Cultivo" description="Gestión de zonas de cultivo">
+
             <DashboardCard title="Zonas de Cultivo">
+            
+
                 <Stack spacing={2}>
                     <MuiButton variant="contained" onClick={() => handleOpenModal()}>
                         Agregar Zona de Cultivo
                     </MuiButton>
+
 
                     <TableContainer component={Paper}>
                         <Table>
@@ -466,6 +470,7 @@ const ZonaCultivo = () => {
                                                 {flexRender(header.column.columnDef.header, header.getContext())}
                                             </TableCell>
                                         ))}
+                                        
                                     </TableRow>
                                 ))}
                             </TableHead>
@@ -498,6 +503,8 @@ const ZonaCultivo = () => {
                     </TableContainer>
                 </Stack>
             </DashboardCard>
+
+
 
             {/* Modal de datos básicos */}
             <Modal open={openModal} onClose={handleCloseModal}>
