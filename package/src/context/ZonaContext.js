@@ -1,34 +1,50 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { zonaService } from "../services/zonaSevices";
+// Asegúrate de que la ruta sea correcta
 
 const ZonaContext = createContext();
 
 export const ZonaProvider = ({ children }) => {
-    const [zonas, setZonas] = useState(() => {
-        const savedZonas = localStorage.getItem('zonas');
-        return savedZonas ? JSON.parse(savedZonas) : [];
-    });
+    const [zonas, setZonas] = useState([]);
 
-    // Guardar en localStorage automáticamente
+    // Obtener zonas al cargar el componente
     useEffect(() => {
-        localStorage.setItem('zonas', JSON.stringify(zonas));
-    }, [zonas]);
-
-    // Función optimizada con useCallback
-    const handleAddZone = useCallback((newZone) => {
-        setZonas(prevZonas => [...prevZonas, { 
-            ...newZone, 
-            id: Date.now() // Usamos timestamp para IDs únicos
-        }]);
+        const fetchZonas = async () => {
+            try {
+                const data = await zonaService.getAll();
+                setZonas(data);
+            } catch (error) {
+                console.error('Error al obtener zonas:', error);
+            }
+        };
+        fetchZonas();
     }, []);
 
-    const handleRemoveZone = useCallback((id) => {
-        setZonas(prevZonas => prevZonas.filter(zona => zona.id !== id));
+    const handleAddZone = useCallback(async (newZone) => {
+        try {
+            const createdZone = await zonaService.create(newZone);
+            setZonas(prevZonas => [...prevZonas, createdZone]);
+        } catch (error) {
+            console.error('Error al agregar zona:', error);
+        }
     }, []);
 
-    const handleUpdateZone = useCallback((id, updatedData) => {
-        setZonas(prevZonas => prevZonas.map(zona => 
-            zona.id === id ? { ...zona, ...updatedData } : zona
-        ));
+    const handleRemoveZone = useCallback(async (id) => {
+        try {
+            await zonaService.delete(id);
+            setZonas(prevZonas => prevZonas.filter(zona => zona.id !== id));
+        } catch (error) {
+            console.error('Error al eliminar zona:', error);
+        }
+    }, []);
+
+    const handleUpdateZone = useCallback(async (id, updatedData) => {
+        try {
+            const updatedZone = await zonaService.update(id, updatedData);
+            setZonas(prevZonas => prevZonas.map(zona => (zona.id === id ? updatedZone : zona)));
+        } catch (error) {
+            console.error('Error al actualizar zona:', error);
+        }
     }, []);
 
     return (

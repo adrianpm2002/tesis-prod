@@ -17,6 +17,8 @@ import {
     TextField,
     Grid,
     TablePagination,
+    Alert,
+    Snackbar
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -213,97 +215,89 @@ const StyledWrapper = styled.div`
 // ------------------------------------
 const initialValues = {
     nombre: '',
-    cantidadPlantas: '',
-    fechaCultivo: '',
-    tiempoCultivo: '',
+    cantidad_plantas: '',
+    fecha_cultivo: '',
+    tiempo_cultivo: '',
 };
 
 const initialParametros = {
-    acidezMin: '',
-    acidezMax: '',
-    temperaturaMin: '',
-    temperaturaMax: '',
-    humedadMin: '',
-    humedadMax: '',
-    radiacionMin: '',
-    radiacionMax: '',
+    acidez_min: '',
+    acidez_max: '',
+    temperatura_min: '',
+    temperatura_max: '',
+    humedad_min: '',
+    humedad_max: '',
+    radiacion_min: '',
+    radiacion_max: '',
 };
 
 const validationSchema = Yup.object({
     nombre: Yup.string().required('El nombre es obligatorio'),
-    cantidadPlantas: Yup.number()
+    cantidad_plantas: Yup.number()
         .typeError('Debe ser un número')
         .min(0, 'No puede ser un número negativo')
         .required('La cantidad de plantas es obligatoria'),
-    fechaCultivo: Yup.date()
+    fecha_cultivo: Yup.date()
         .typeError('Debe seleccionar una fecha válida')
         .required('La fecha de cultivo es obligatoria'),
-    tiempoCultivo: Yup.number()
+    tiempo_cultivo: Yup.number()
         .typeError('Debe ser un número')
         .min(0, 'No puede ser un número negativo')
         .required('El tiempo de cultivo es obligatorio'),
 });
 
 const parametrosSchema = Yup.object({
-    acidezMin: Yup.number()
+    acidez_min: Yup.number()
         .typeError('Debe ser un número')
         .min(0, 'El pH mínimo no puede ser menor que 0')
         .max(14, 'El pH mínimo no puede ser mayor que 14')
-        .required('El pH mínimo es obligatorio')
         .test('esMenorQueMax', 'El pH mínimo debe ser menor que el máximo', function (value) {
-            return !this.parent.acidezMax || value < this.parent.acidezMax;
+            return !this.parent.acidez_max || value < this.parent.acidez_max;
         }),
-    acidezMax: Yup.number()
+    acidez_max: Yup.number()
         .typeError('Debe ser un número')
         .min(0, 'El pH máximo no puede ser menor que 0')
-        .max(14, 'El pH máximo no puede ser mayor que 14')
-        .required('El pH máximo es obligatorio'),
-    temperaturaMin: Yup.number()
+        .max(14, 'El pH máximo no puede ser mayor que 14'),
+    temperatura_min: Yup.number()
         .typeError('Debe ser un número')
         .min(-40, 'La temperatura mínima no puede ser menor que -40°C')
         .max(40, 'La temperatura mínima no puede ser mayor que 40°C')
-        .required('La temperatura mínima es obligatoria')
         .test('esMenorQueMax', 'La temperatura mínima debe ser menor que la máxima', function (value) {
-            return !this.parent.temperaturaMax || value < this.parent.temperaturaMax;
+            return !this.parent.temperatura_max || value < this.parent.temperatura_max;
         }),
-    temperaturaMax: Yup.number()
+    temperatura_max: Yup.number()
         .typeError('Debe ser un número')
         .min(-40, 'La temperatura máxima no puede ser menor que -40°C')
-        .max(40, 'La temperatura máxima no puede ser mayor que 40°C')
-        .required('La temperatura máxima es obligatoria'),
-    humedadMin: Yup.number()
+        .max(40, 'La temperatura máxima no puede ser mayor que 40°C'),
+    humedad_min: Yup.number()
         .typeError('Debe ser un número')
         .min(0, 'La humedad mínima no puede ser menor que 0%')
         .max(100, 'La humedad mínima no puede ser mayor que 100%')
-        .required('La humedad mínima es obligatoria')
         .test('esMenorQueMax', 'La humedad mínima debe ser menor que la máxima', function (value) {
-            return !this.parent.humedadMax || value < this.parent.humedadMax;
+            return !this.parent.humedad_max || value < this.parent.humedad_max;
         }),
-    humedadMax: Yup.number()
+    humedad_max: Yup.number()
         .typeError('Debe ser un número')
         .min(0, 'La humedad máxima no puede ser menor que 0%')
-        .max(100, 'La humedad máxima no puede ser mayor que 100%')
-        .required('La humedad máxima es obligatoria'),
-    radiacionMin: Yup.number()
+        .max(100, 'La humedad máxima no puede ser mayor que 100%'),
+    radiacion_min: Yup.number()
         .typeError('Debe ser un número')
         .min(0, 'La radiación mínima no puede ser menor que 0 W/m²')
         .max(2000, 'La radiación mínima no puede ser mayor que 2000 W/m²')
-        .required('La radiación mínima es obligatoria')
         .test('esMenorQueMax', 'La radiación mínima debe ser menor que la máxima', function (value) {
-            return !this.parent.radiacionMax || value < this.parent.radiacionMax;
+            return !this.parent.radiacion_max || value < this.parent.radiacion_max;
         }),
-    radiacionMax: Yup.number()
+    radiacion_max: Yup.number()
         .typeError('Debe ser un número')
         .min(0, 'La radiación máxima no puede ser menor que 0 W/m²')
-        .max(2000, 'La radiación máxima no puede ser mayor que 2000 W/m²')
-        .required('La radiación máxima es obligatoria'),
+        .max(2000, 'La radiación máxima no puede ser mayor que 2000 W/m²'),
 });
 
 // ------------------------------------
 // Componente Principal
 // ------------------------------------
 const ZonaCultivo = () => {
-    const { zonas, handleAddZone, handleUpdateZone, handleRemoveZone } = useZonas();
+    const { zonas, handleAddZone, handleUpdateZone, handleRemoveZone, error } = useZonas();
     const [openModal, setOpenModal] = useState(false);
     const [openParametrosModal, setOpenParametrosModal] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
@@ -311,6 +305,16 @@ const ZonaCultivo = () => {
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
     const [zoneToDelete, setZoneToDelete] = useState(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [apiError, setApiError] = useState(null);
+
+    // Mostrar errores de la API
+    useEffect(() => {
+        if (error) {
+            setApiError(error);
+            const timer = setTimeout(() => setApiError(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     // Función para abrir el modal de confirmación
     const handleOpenDeleteModal = (id) => {
@@ -319,9 +323,13 @@ const ZonaCultivo = () => {
     };
 
     // Función para confirmar la eliminación
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (zoneToDelete) {
-            handleRemoveZone(zoneToDelete);
+            try {
+                await handleRemoveZone(zoneToDelete);
+            } catch (err) {
+                setApiError(err.message);
+            }
         }
         setOpenDeleteModal(false);
     };
@@ -341,23 +349,35 @@ const ZonaCultivo = () => {
     const parametrosFormik = useFormik({
         initialValues: initialParametros,
         validationSchema: parametrosSchema,
-        onSubmit: (values) => {
-            const zonaCompleta = { ...tempBasicData, ...values };
-            if (editingIndex !== null) {
-                handleUpdateZone(zonas[editingIndex].id, zonaCompleta);
-            } else {
-                handleAddZone(zonaCompleta); // Actualización en tiempo real aquí
-                setShowSuccessModal(true);
-                setTimeout(() => setShowSuccessModal(false), 3000); // Cierra después de 3 segundos
+        onSubmit: async (values) => {
+            try {
+                const zonaCompleta = { 
+                    ...tempBasicData, 
+                    ...values,
+                    // Convertir campos vacíos a null para el backend
+                    acidez_min: values.acidez_min === '' ? null : values.acidez_min,
+                    acidez_max: values.acidez_max === '' ? null : values.acidez_max,
+                    temperatura_min: values.temperatura_min === '' ? null : values.temperatura_min,
+                    temperatura_max: values.temperatura_max === '' ? null : values.temperatura_max,
+                    humedad_min: values.humedad_min === '' ? null : values.humedad_min,
+                    humedad_max: values.humedad_max === '' ? null : values.humedad_max,
+                    radiacion_min: values.radiacion_min === '' ? null : values.radiacion_min,
+                    radiacion_max: values.radiacion_max === '' ? null : values.radiacion_max
+                };
+                
+                if (editingIndex !== null) {
+                    await handleUpdateZone(zonas[editingIndex].id, zonaCompleta);
+                } else {
+                    await handleAddZone(zonaCompleta);
+                    setShowSuccessModal(true);
+                    setTimeout(() => setShowSuccessModal(false), 3000);
+                }
+                handleCloseParametrosModal();
+            } catch (err) {
+                setApiError(err.message);
             }
-            handleCloseParametrosModal();
         },
     });
-
-    // Función para cerrar el modal de éxito
-    const handleCloseSuccessModal = () => {
-        setShowSuccessModal(false);
-    };
 
     // Cerrar modales y resetear estados
     const handleCloseModal = () => {
@@ -378,9 +398,9 @@ const ZonaCultivo = () => {
             const zona = zonas[index];
             formik.setValues({
                 nombre: zona.nombre,
-                cantidadPlantas: zona.cantidadPlantas,
-                fechaCultivo: zona.fechaCultivo,
-                tiempoCultivo: zona.tiempoCultivo,
+                cantidad_plantas: zona.cantidad_plantas,
+                fecha_cultivo: zona.fecha_cultivo,
+                tiempo_cultivo: zona.tiempo_cultivo,
             });
             setEditingIndex(index);
         } else {
@@ -394,14 +414,14 @@ const ZonaCultivo = () => {
     const handleOpenParametrosModal = (index) => {
         const zona = zonas[index];
         parametrosFormik.setValues({
-            acidezMin: zona.acidezMin || '',
-            acidezMax: zona.acidezMax || '',
-            temperaturaMin: zona.temperaturaMin || '',
-            temperaturaMax: zona.temperaturaMax || '',
-            humedadMin: zona.humedadMin || '',
-            humedadMax: zona.humedadMax || '',
-            radiacionMin: zona.radiacionMin || '',
-            radiacionMax: zona.radiacionMax || '',
+            acidez_min: zona.acidez_min || '',
+            acidez_max: zona.acidez_max || '',
+            temperatura_min: zona.temperatura_min || '',
+            temperatura_max: zona.temperatura_max || '',
+            humedad_min: zona.humedad_min || '',
+            humedad_max: zona.humedad_max || '',
+            radiacion_min: zona.radiacion_min || '',
+            radiacion_max: zona.radiacion_max || '',
         });
         setEditingIndex(index);
         setOpenParametrosModal(true);
@@ -412,12 +432,12 @@ const ZonaCultivo = () => {
     const columns = useMemo(
         () => [
             columnHelper.accessor('nombre', { header: 'Nombre' }),
-            columnHelper.accessor('cantidadPlantas', { header: 'Plantas' }),
-            columnHelper.accessor('fechaCultivo', {
+            columnHelper.accessor('cantidad_plantas', { header: 'Plantas' }),
+            columnHelper.accessor('fecha_cultivo', {
                 header: 'Fecha de Cultivo',
                 cell: info => info.getValue() ? new Date(info.getValue()).toLocaleDateString('es-ES') : '',
             }),
-            columnHelper.accessor('tiempoCultivo', {
+            columnHelper.accessor('tiempo_cultivo', {
                 header: 'Tiempo de Cultivo',
                 cell: info => `${info.getValue()} días`,
             }),
@@ -438,27 +458,35 @@ const ZonaCultivo = () => {
 
     const table = useReactTable({
         data: zonas,
-        columns, // las columnas definidas anteriormente
+        columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         initialState: {
             pagination: {
-                pageSize: 5, // Tamaño de página por defecto
+                pageSize: 5,
             },
         },
     });
 
     return (
         <PageContainer title="Zona de Cultivo" description="Gestión de zonas de cultivo">
-
             <DashboardCard title="Zonas de Cultivo">
-            
+                {/* Notificación de errores */}
+                <Snackbar
+                    open={!!apiError}
+                    autoHideDuration={6000}
+                    onClose={() => setApiError(null)}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                >
+                    <Alert severity="error" onClose={() => setApiError(null)}>
+                        {apiError}
+                    </Alert>
+                </Snackbar>
 
                 <Stack spacing={2}>
                     <MuiButton variant="contained" onClick={() => handleOpenModal()}>
                         Agregar Zona de Cultivo
                     </MuiButton>
-
 
                     <TableContainer component={Paper}>
                         <Table>
@@ -470,7 +498,6 @@ const ZonaCultivo = () => {
                                                 {flexRender(header.column.columnDef.header, header.getContext())}
                                             </TableCell>
                                         ))}
-                                        
                                     </TableRow>
                                 ))}
                             </TableHead>
@@ -486,7 +513,6 @@ const ZonaCultivo = () => {
                                 ))}
                             </TableBody>
                         </Table>
-                        {/* Paginación */}
                         <TablePagination
                             rowsPerPageOptions={[5, 10, 25]}
                             component="div"
@@ -504,8 +530,6 @@ const ZonaCultivo = () => {
                 </Stack>
             </DashboardCard>
 
-
-
             {/* Modal de datos básicos */}
             <Modal open={openModal} onClose={handleCloseModal}>
                 <Box sx={modalStyle}>
@@ -518,7 +542,9 @@ const ZonaCultivo = () => {
                                 fullWidth
                                 label="Nombre"
                                 name="nombre"
-                                {...formik.getFieldProps('nombre')}
+                                value={formik.values.nombre}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
                                 error={formik.touched.nombre && !!formik.errors.nombre}
                                 helperText={formik.touched.nombre && formik.errors.nombre}
                             />
@@ -526,30 +552,36 @@ const ZonaCultivo = () => {
                                 fullWidth
                                 type="number"
                                 label="Cantidad de Plantas"
-                                name="cantidadPlantas"
-                                {...formik.getFieldProps('cantidadPlantas')}
-                                error={formik.touched.cantidadPlantas && !!formik.errors.cantidadPlantas}
-                                helperText={formik.touched.cantidadPlantas && formik.errors.cantidadPlantas}
+                                name="cantidad_plantas"
+                                value={formik.values.cantidad_plantas}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.cantidad_plantas && !!formik.errors.cantidad_plantas}
+                                helperText={formik.touched.cantidad_plantas && formik.errors.cantidad_plantas}
                                 InputProps={{ inputProps: { min: 0 } }}
                             />
                             <TextField
                                 fullWidth
                                 type="date"
                                 label="Fecha de Cultivo"
-                                name="fechaCultivo"
+                                name="fecha_cultivo"
                                 InputLabelProps={{ shrink: true }}
-                                {...formik.getFieldProps('fechaCultivo')}
-                                error={formik.touched.fechaCultivo && !!formik.errors.fechaCultivo}
-                                helperText={formik.touched.fechaCultivo && formik.errors.fechaCultivo}
+                                value={formik.values.fecha_cultivo}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.fecha_cultivo && !!formik.errors.fecha_cultivo}
+                                helperText={formik.touched.fecha_cultivo && formik.errors.fecha_cultivo}
                             />
                             <TextField
                                 fullWidth
                                 type="number"
                                 label="Tiempo de Cultivo (días)"
-                                name="tiempoCultivo"
-                                {...formik.getFieldProps('tiempoCultivo')}
-                                error={formik.touched.tiempoCultivo && !!formik.errors.tiempoCultivo}
-                                helperText={formik.touched.tiempoCultivo && formik.errors.tiempoCultivo}
+                                name="tiempo_cultivo"
+                                value={formik.values.tiempo_cultivo}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.tiempo_cultivo && !!formik.errors.tiempo_cultivo}
+                                helperText={formik.touched.tiempo_cultivo && formik.errors.tiempo_cultivo}
                                 InputProps={{ inputProps: { min: 0 } }}
                             />
                             <MuiButton type="submit" variant="contained">
@@ -571,14 +603,14 @@ const ZonaCultivo = () => {
                     <form onSubmit={parametrosFormik.handleSubmit}>
                         <Grid container spacing={3}>
                             {[
-                                { label: 'Acidez Mínima (pH)', name: 'acidezMin', min: 0, max: 14, step: 0.1 },
-                                { label: 'Acidez Máxima (pH)', name: 'acidezMax', min: 0, max: 14, step: 0.1 },
-                                { label: 'Temperatura Mínima (°C)', name: 'temperaturaMin', min: -40, max: 40, step: 0.1 },
-                                { label: 'Temperatura Máxima (°C)', name: 'temperaturaMax', min: -40, max: 40, step: 0.1 },
-                                { label: 'Humedad Mínima (%)', name: 'humedadMin', min: 0, max: 100 },
-                                { label: 'Humedad Máxima (%)', name: 'humedadMax', min: 0, max: 100 },
-                                { label: 'Radiación Mínima (W/m²)', name: 'radiacionMin', min: 0, max: 2000 },
-                                { label: 'Radiación Máxima (W/m²)', name: 'radiacionMax', min: 0, max: 2000 },
+                                { label: 'Acidez Mínima (pH)', name: 'acidez_min', min: 0, max: 14, step: 0.1 },
+                                { label: 'Acidez Máxima (pH)', name: 'acidez_max', min: 0, max: 14, step: 0.1 },
+                                { label: 'Temperatura Mínima (°C)', name: 'temperatura_min', min: -40, max: 40, step: 0.1 },
+                                { label: 'Temperatura Máxima (°C)', name: 'temperatura_max', min: -40, max: 40, step: 0.1 },
+                                { label: 'Humedad Mínima (%)', name: 'humedad_min', min: 0, max: 100 },
+                                { label: 'Humedad Máxima (%)', name: 'humedad_max', min: 0, max: 100 },
+                                { label: 'Radiación Mínima (W/m²)', name: 'radiacion_min', min: 0, max: 2000 },
+                                { label: 'Radiación Máxima (W/m²)', name: 'radiacion_max', min: 0, max: 2000 },
                             ].map((field, idx) => (
                                 <Grid item xs={12} sm={6} key={field.name}>
                                     <TextField
@@ -586,7 +618,9 @@ const ZonaCultivo = () => {
                                         label={field.label}
                                         name={field.name}
                                         type="number"
-                                        {...parametrosFormik.getFieldProps(field.name)}
+                                        value={parametrosFormik.values[field.name]}
+                                        onChange={parametrosFormik.handleChange}
+                                        onBlur={parametrosFormik.handleBlur}
                                         error={parametrosFormik.touched[field.name] && !!parametrosFormik.errors[field.name]}
                                         helperText={parametrosFormik.touched[field.name] && parametrosFormik.errors[field.name]}
                                         InputProps={{
@@ -632,14 +666,15 @@ const ZonaCultivo = () => {
                 </Box>
             </Modal>
 
+            {/* Modal de Éxito */}
             <Modal
                 open={showSuccessModal}
-                onClose={handleCloseSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
                 BackdropProps={{ style: { backgroundColor: 'transparent' } }}
                 sx={{
                     '& .MuiBox-root': {
                         outline: 'none',
-                        maxWidth: 'fit-content' // Ajusta el ancho al contenido
+                        maxWidth: 'fit-content'
                     }
                 }}
             >
@@ -651,14 +686,12 @@ const ZonaCultivo = () => {
                     boxShadow: 'none',
                     p: 0,
                 }}>
-                    <SuccessCard onClose={handleCloseSuccessModal} />
+                    <SuccessCard onClose={() => setShowSuccessModal(false)} />
                 </Box>
             </Modal>
-
         </PageContainer>
     );
 };
-
 
 
 // Estilo del modal
