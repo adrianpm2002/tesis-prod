@@ -63,12 +63,12 @@ const Menuitems = [
     navlabel: true,
     subheader: 'Configuración',
   },
-  {
+  /*{
     id: uniqueId(),
     title: 'Sensores',
     icon: IconAperture,
     href: '/sensores',
-  },
+  },*/
 
   {
     id: uniqueId(),
@@ -104,7 +104,7 @@ const Menuitems = [
     navlabel: true,
     subheader: 'Extra',
   },
-  {
+  /*{
     id: uniqueId(),
     title: 'Icons',
     icon: IconMoodHappy,
@@ -115,7 +115,7 @@ const Menuitems = [
     title: 'Sample Page',
     icon: IconAperture,
     href: '/sample-page',
-  },
+  },*/
 ];
 
 export default Menuitems;
