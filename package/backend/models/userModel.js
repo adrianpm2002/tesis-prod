@@ -38,30 +38,30 @@ const createUser = async (userData) => {
 };
 
 // Función para actualizar datos adicionales después con validaciones
-const updateUserDetails = async (userId, { province, municipality, category }) => {
+const updateUserDetails = async (userId, { provincia, municipality, categoria }) => {
   // Validar provincia
-  if (province && !provincesData[province]) {
+  if (provincia && !provincesData[provincia]) {
     throw new Error('Provincia inválida');
   }
 
   // Validar municipio
-  if (province && municipality) {
-    if (!provincesData[province].includes(municipality)) {
+  if (provincia && municipality) {
+    if (!provincesData[provincia].includes(municipality)) {
       throw new Error('Municipio no pertenece a la provincia seleccionada');
     }
   }
 
   // Validar categoría
-  if (category && !categories.includes(category)) {
+  if (categoria && !categories.includes(categoria)) {
     throw new Error('Categoría inválida');
   }
 
   const query = {
     text: `UPDATE users 
-           SET province = $1, municipality = $2, category = $3, updated_at = NOW()
+           SET provincia = $1, municipality = $2, categoria = $3, updated_at = NOW()
            WHERE id = $4
-           RETURNING id, name, email, province, municipality, category`,
-    values: [province, municipality, category, userId]
+           RETURNING id, name, email, provincia, municipality, categoria`,
+    values: [provincia, municipality, categoria, userId]
   };
   
   const result = await pool.query(query);
@@ -87,7 +87,7 @@ const comparePasswords = async (candidatePassword, hashedPassword) => {
 // Función para encontrar usuario por ID (ahora incluye los nuevos campos)
 const findUserById = async (id) => {
   const query = {
-    text: 'SELECT id, name, email, province, municipality, category FROM users WHERE id = $1',
+    text: 'SELECT id, name, email, provincia, municipality, categoria FROM users WHERE id = $1',
     values: [id]
   };
   

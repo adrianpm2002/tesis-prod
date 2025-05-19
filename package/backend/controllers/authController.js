@@ -57,13 +57,29 @@ const loginUser = async (req, res) => {
 
         // Crear token JWT
         const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
+        console.log("🔐 Token generado en login:", token);
         res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
     } catch (error) {
         console.error('Error en el inicio de sesión:', error);
         res.status(500).json({ message: 'Error en el servidor' });
     }
 };
+
+
+app.post('/api/auth/refresh', (req, res) => {
+    try {
+      const refreshToken = req.headers.authorization?.split(" ")[1]; // Obtener el token del header
+      const decoded = jwt.verify(refreshToken, SECRET_KEY);
+  
+      // Crear nuevo token con más tiempo de vida
+      const newToken = jwt.sign({ id: decoded.id }, SECRET_KEY, { expiresIn: '1h' });
+  
+      res.json({ token: newToken });
+    } catch (error) {
+      res.status(401).json({ message: "Token inválido o expirado" });
+    }
+  });
+  
 
 module.exports = { registerUser, loginUser };
 

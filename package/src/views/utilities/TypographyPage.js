@@ -30,26 +30,77 @@ const provincias = {
 const UserProfileForm = () => {
   const { user, setUser } = useUserContext(); // Usa el contexto
   const navigate = useNavigate();
-  
+
   const [municipios, setMunicipios] = useState([]);
-  
+
+  // PASO 1: Cargar usuario desde localStorage si el contexto aún no lo tiene
   useEffect(() => {
-    if (user.province) {
-      setMunicipios(provincias[user.province] || []);
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(prevUser => ({ ...prevUser, ...JSON.parse(storedUser) }));
     }
-  }, [user.province]);
-  
+  }, []); // 👈 Se ejecuta solo una vez al montar el componente
+
+  useEffect(() => {
+    console.log(user)
+    if (user.provincia && provincias[user.provincia]) {
+      setMunicipios(provincias[user.provincia]);
+    } else {
+      setMunicipios([]); // 👈 Evita errores si `user.province` es `undefined`
+    }
+  }, [user.provincia]);
+
   const handleAvatarChange = (selectedAvatar) => {
     setUser({ ...user, avatar: selectedAvatar });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(user);
-    navigate('/dashboard');
+
+    try {
+      const token = localStorage.getItem('token');
+
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1])); // Decodifica el JWT
+        const now = Math.floor(Date.now() / 1000); // Obtiene el tiempo actual en segundos
+        if (payload.exp < now) {
+          console.error("🚨 Token expirado. Redirigiendo a login...");
+          localStorage.removeItem('token');
+          window.location.href = '/login'; // Redirigir a login si el token expiró
+          return; // Detener la ejecución si el token no es válido
+        }
+      }
+
+      const response = await fetch('http://localhost:3000/api/auth/me', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`, // 👈 Enviar el token de autenticación
+          'Content-Type': 'application/json'
+        },
+        
+        body: JSON.stringify(user) // 👈 Enviar los datos actualizados
+      });
+
+      const updatedUser = await response.json();
+
+      if (!response.ok) {
+        throw new Error(updatedUser.message || 'Error al actualizar usuario');
+      }
+      
+      console.log("✅ Usuario actualizado:", updatedUser);
+      console.log("🔍 Datos enviados en PUT:", JSON.stringify(user, null, 2));
+      setUser(updatedUser); // 👈 Actualizar el contexto con los nuevos datos
+      localStorage.setItem('user', JSON.stringify(updatedUser)); // 👈 Persistir los cambios en localStorage
+
+      navigate('/dashboard'); // Redirigir después de la actualización
+
+    } catch (error) {
+      console.error("🚨 Error al actualizar usuario:", error);
+    }
   };
 
   return (
+
     <Container maxWidth="sm">
       <Box sx={{ mt: 4, textAlign: 'center' }}>
         <Typography variant="h4">Perfil de Usuario</Typography>
@@ -60,7 +111,7 @@ const UserProfileForm = () => {
           variant="outlined"
           fullWidth
           sx={{ mb: 3 }}
-          value={user.name}
+          value={user?.name || ''}
           onChange={(e) => setUser({ ...user, name: e.target.value })}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, justifyContent: 'center' }}>
@@ -78,12 +129,12 @@ const UserProfileForm = () => {
           ))}
         </Grid>
         <FormControl variant="outlined" fullWidth sx={{ mb: 3 }}>
-          <InputLabel id="category-select-label">Categoría</InputLabel>
+          <InputLabel id="categoria-select-label">Categoría</InputLabel>
           <Select
-            labelId="category-select-label"
+            labelId="categoria-select-label"
             label="Categoría"
-            value={user.category}
-            onChange={(e) => setUser({ ...user, category: e.target.value })}
+            value={user.categoria ?? ''} // 👈 Prevenir valores `undefined`
+            onChange={(e) => setUser({ ...user, categoria: e.target.value })}
           >
             <MenuItem value="Especialista">Especialista</MenuItem>
             <MenuItem value="Tecnico">Técnico</MenuItem>
@@ -95,7 +146,7 @@ const UserProfileForm = () => {
           variant="outlined"
           fullWidth
           sx={{ mb: 3 }}
-          value={user.email}
+          value={user?.email || ''}
           onChange={(e) => setUser({ ...user, email: e.target.value })}
         />
         <FormControl variant="outlined" fullWidth sx={{ mb: 3 }}>
@@ -103,11 +154,11 @@ const UserProfileForm = () => {
           <Select
             labelId="province-select-label"
             label="Provincia"
-            value={user.province}
-            onChange={(e) => setUser({ ...user, province: e.target.value })}
+            value={user.provincia|| ''}
+            onChange={(e) => setUser({ ...user, provincia: e.target.value })}
           >
-            {Object.keys(provincias).map((province) => (
-              <MenuItem key={province} value={province}>{province}</MenuItem>
+            {Object.keys(provincias).map((provincia) => (
+              <MenuItem key={provincia} value={provincia}>{provincia}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -116,10 +167,11 @@ const UserProfileForm = () => {
           <Select
             labelId="municipio-select-label"
             label="Municipio"
-            value={user.municipio}
+            value={user.municipio || ''} // 👈 Si es `undefined`, usa una cadena vacía
             onChange={(e) => setUser({ ...user, municipio: e.target.value })}
-            disabled={!user.province}
+            disabled={!user.provincia}
           >
+
             {municipios.map((municipio) => (
               <MenuItem key={municipio} value={municipio}>{municipio}</MenuItem>
             ))}
