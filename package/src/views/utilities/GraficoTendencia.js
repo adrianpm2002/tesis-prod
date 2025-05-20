@@ -23,30 +23,10 @@ import DashboardCard from '../../components/shared/DashboardCard';
 import { useZonas } from '../../context/ZonaContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import './Historial.css'; // Asegúrate de tener este archivo para los estilos
+import { useEffect } from "react";
+import axios from "axios";
 
-const generateRandomData = (days) => {
-    const data = [];
-    const today = new Date();
-    for (let i = 0; i < days; i++) {
-        const date = new Date();
-        date.setDate(today.getDate() - i);
-        const humedades = Array.from({ length: 24 }, () => Math.floor(Math.random() * 100));
-        const temperaturaMin = (Math.random() * 5 + 15).toFixed(2);
-        const temperaturaMax = (Math.random() * 10 + 20).toFixed(2);
-        const ph = (Math.random() * 2 + 5).toFixed(2);
-        const radiacion = Math.floor(Math.random() * 600 + 300);
 
-        data.push({
-            fecha: date.toISOString().split('T')[0],
-            humedad: (humedades.reduce((a, b) => a + b, 0) / humedades.length).toFixed(2),
-            temperaturaMin,
-            temperaturaMax,
-            ph,
-            radiacion,
-        });
-    }
-    return data;
-};
 
 const Historial = () => {
     const { zonas } = useZonas(); // Obtener las zonas del contexto
@@ -56,18 +36,51 @@ const Historial = () => {
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [selectedParameter, setSelectedParameter] = useState('humedad'); // Parámetro seleccionado para el gráfico
 
-    const handleZoneChange = (event) => {
-        const selected = zonas.find(z => z.nombre === event.target.value);
-        setSelectedZone(selected);
-        // Generar datos aleatorios para la zona seleccionada
-        const data = generateRandomData(30);
-        setHistoricalData(data);
-        setPage(0); // Resetear la página al seleccionar una nueva zona
-    };
 
-    
 
-    
+    useEffect(() => {
+        const fetchHistoricalData = async () => {
+            try {
+                const response = await axios.get(`http://localhost:5000/api/sensor-history`);
+                console.log("Datos históricos recibidos:", response.data);
+
+                const aggregatedData = response.data.reduce((acc, dato) => {
+                    const fecha = dato.fecha.split("T")[0];
+
+                    if (!acc[fecha]) {
+                        acc[fecha] = { fecha, humedad: [], temperaturaMin: [], temperaturaMax: [], ph: [], radiacion: [] };
+                    }
+
+                    acc[fecha].humedad.push(parseFloat(dato.humedad) || 0); // ✅ Evita NaN
+                    acc[fecha].temperaturaMin.push(parseFloat(dato.temperatura_min) || 0);
+                    acc[fecha].temperaturaMax.push(parseFloat(dato.temperatura_max) || 0);
+                    acc[fecha].ph.push(parseFloat(dato.ph) || 0);
+                    acc[fecha].radiacion.push(parseFloat(dato.radiacion) || 0);
+
+                    return acc;
+                }, {});
+
+                const formattedData = Object.values(aggregatedData).map((day) => ({
+                    fecha: day.fecha,
+                    humedad: day.humedad.length ? (day.humedad.reduce((sum, h) => sum + h, 0) / day.humedad.length).toFixed(2) : "0.00",
+                    temperaturaMin: day.temperaturaMin.length ? (day.temperaturaMin.reduce((sum, t) => sum + t, 0) / day.temperaturaMin.length).toFixed(2) : "0.00",
+                    temperaturaMax: day.temperaturaMax.length ? (day.temperaturaMax.reduce((sum, t) => sum + t, 0) / day.temperaturaMax.length).toFixed(2) : "0.00",
+                    ph: day.ph.length ? (day.ph.reduce((sum, p) => sum + p, 0) / day.ph.length).toFixed(2) : "0.00",
+                    radiacion: day.radiacion.length ? (day.radiacion.reduce((sum, r) => sum + r, 0) / day.radiacion.length).toFixed(2) : "0.00",
+                }));
+
+                console.log("Datos formateados para el gráfico:", formattedData);
+                setHistoricalData(formattedData);
+            } catch (error) {
+                console.error("Error al obtener datos históricos:", error);
+            }
+        };
+
+        fetchHistoricalData();
+    }, []);
+
+
+
 
     const handleParameterChange = (param) => {
         setSelectedParameter(param);
@@ -88,24 +101,7 @@ const Historial = () => {
     return (
         <PageContainer title="Historial" description="Visualización del historial de zonas de cultivo">
             <DashboardCard title="Historial de Cultivo">
-                <Box sx={{ marginBottom: 3 }}>
-                    <FormControl fullWidth variant="outlined" size="small">
-                        <InputLabel id="zone-select-label">Selecciona una Zona</InputLabel>
-                        <Select
-                            labelId="zone-select-label"
-                            value={selectedZone ? selectedZone.nombre : ''}
-                            onChange={handleZoneChange}
-                            label="Selecciona una Zona"
-                            sx={{ backgroundColor: 'white', color: 'black' }}
-                        >
-                            {zonas.map((zona) => (
-                                <MenuItem key={zona.id} value={zona.nombre}>
-                                    {zona.nombre}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Box>
+
 
                 {/* Botones para seleccionar el parámetro del gráfico */}
                 <Box sx={{ marginTop: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'center' }}>
@@ -123,17 +119,18 @@ const Historial = () => {
                         <YAxis />
                         <RechartsTooltip />
                         <Legend />
-                        {selectedParameter === 'humedad' && <Line type="monotone" dataKey="humedad" stroke="#8884d8" />}
-                        {selectedParameter === 'temperatura' && (
+                        {selectedParameter === "humedad" && <Line type="monotone" dataKey="humedad" stroke="#8884d8" />}
+                        {selectedParameter === "temperatura" && (
                             <>
                                 <Line type="monotone" dataKey="temperaturaMin" stroke="#82ca9d" />
                                 <Line type="monotone" dataKey="temperaturaMax" stroke="#ff7300" />
                             </>
                         )}
-                        {selectedParameter === 'ph' && <Line type="monotone" dataKey="ph" stroke="#ff0000" />}
-                        {selectedParameter === 'radiacion' && <Line type="monotone" dataKey="radiacion" stroke="#0000ff" />}
+                        {selectedParameter === "ph" && <Line type="monotone" dataKey="ph" stroke="#43a047" />}
+                        {selectedParameter === "radiacion" && <Line type="monotone" dataKey="radiacion" stroke="#d50000" />}
                     </LineChart>
                 </ResponsiveContainer>
+
 
             </DashboardCard>
         </PageContainer>

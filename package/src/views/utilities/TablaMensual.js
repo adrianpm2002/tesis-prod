@@ -31,6 +31,11 @@ import { useZonas } from '../../context/ZonaContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
+import { useEffect } from 'react';
+import axios from 'axios';
+
+
+
 
 function TablePaginationActions(props) {
     const theme = useTheme();
@@ -78,31 +83,6 @@ function TablePaginationActions(props) {
     );
 }
 
-const generateRandomData = (days) => {
-    const data = [];
-    const today = new Date();
-    for (let i = 0; i < days; i++) {
-        const date = new Date();
-        date.setDate(today.getDate() - i);
-        const humedades = Array.from({ length: 24 }, () => Math.floor(Math.random() * 100));
-        const temperaturaMin = (Math.random() * 5 + 15).toFixed(2);
-        const temperaturaMax = (Math.random() * 10 + 20).toFixed(2);
-        const ph = (Math.random() * 2 + 5).toFixed(2);
-        const radiacion = Math.floor(Math.random() * 800 + 200);
-
-        data.push({
-            fecha: date.toISOString().split('T')[0],
-            humedad: (humedades.reduce((a, b) => a + b, 0) / humedades.length).toFixed(2),
-            humedadPorHora: humedades,
-            temperatura: `${temperaturaMin} - ${temperaturaMax}`,
-            ph,
-            radiacion,
-            comentario: '',
-            anormal: false
-        });
-    }
-    return data;
-};
 
 export default function TablaMensual() {
     const { zonas } = useZonas();
@@ -112,17 +92,49 @@ export default function TablaMensual() {
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [selectedRow, setSelectedRow] = useState(null);
 
-    const handleZoneChange = (event) => {
+    useEffect(() => {
+        const fetchHistoricalData = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/sensor-history');
+                console.log('Datos que llegan al frontend:', response.data);
+                setHistoricalData(response.data);
+            } catch (error) {
+                console.error('Error al obtener datos históricos:', error);
+            }
+        };
+
+        fetchHistoricalData();
+    }, []);
+
+    const handleZoneChange = async (event) => {
         const selected = zonas.find(z => z.nombre === event.target.value);
         setSelectedZone(selected);
-        const data = generateRandomData(30);
-        setHistoricalData(data);
-        setPage(0);
+
+        try {
+            const response = await axios.get(`http://localhost:5000/api/sensor-history/${selected.nombre}`);
+            setHistoricalData(response.data);
+        } catch (error) {
+            console.error('Error al obtener datos históricos por zona:', error);
+        }
+
+        setPage(0); // Resetear la página al cambiar de zona
     };
 
-    const handleRowClick = (row) => {
-        setSelectedRow(row);
+    const handleRowClick = async (row) => {
+        try {
+            const fecha = row.fecha.split('T')[0]; // ✅ Extrae `YYYY-MM-DD`
+
+            console.log("Solicitando datos para la fecha:", fecha);
+
+            const response = await axios.get(`http://localhost:5000/api/sensor-history/${fecha}`);
+            setSelectedRow({ ...row, datosPorHora: response.data });
+        } catch (error) {
+            console.error("Error al obtener datos por hora:", error);
+        }
     };
+
+    const [parametroSeleccionado, setParametroSeleccionado] = useState("humedad"); // 🚀 Parámetro por defecto
+
 
     const handleCloseModal = () => {
         setSelectedRow(null);
@@ -165,26 +177,13 @@ export default function TablaMensual() {
 
     const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - historicalData.length) : 0;
 
+
+
     return (
         <PageContainer title="Historial" description="Visualización del historial de zonas de cultivo">
             <DashboardCard title="Historial de Cultivo">
                 <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between' }}>
-                    <FormControl variant="outlined" size="small" sx={{ minWidth: 250 }}>
-                        <InputLabel id="zone-select-label">Selecciona una Zona</InputLabel>
-                        <Select
-                            labelId="zone-select-label"
-                            value={selectedZone ? selectedZone.nombre : ''}
-                            onChange={handleZoneChange}
-                            label="Selecciona una Zona"
-                            sx={{ backgroundColor: 'white', color: 'black' }}
-                        >
-                            {zonas.map((zona) => (
-                                <MenuItem key={zona.id} value={zona.nombre}>
-                                    {zona.nombre}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
+
                     <Button variant="contained" onClick={exportPDF}>Generar Reporte</Button>
                 </Box>
 
@@ -200,25 +199,17 @@ export default function TablaMensual() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {(rowsPerPage > 0
-                                ? historicalData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                : historicalData
-                            ).map((row, idx) => (
-                                <TableRow key={idx} hover onClick={() => handleRowClick(row)}>
-                                    <TableCell>{row.fecha}</TableCell>
-                                    <TableCell align="right">{row.humedad}</TableCell>
-                                    <TableCell align="right">{row.temperatura}</TableCell>
-                                    <TableCell align="right">{row.ph}</TableCell>
-                                    <TableCell align="right">{row.radiacion}</TableCell>
+                            {historicalData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((data, index) => (
+                                <TableRow key={index} hover onClick={() => handleRowClick(data)}>
+                                    <TableCell>{data.fecha ? data.fecha.split('T')[0] : 'Sin fecha'}</TableCell>
+                                    <TableCell align="right">{data.humedad ?? 'N/A'}</TableCell>
+                                    <TableCell align="right">{data.temperatura_min ?? 'N/A'} - {data.temperatura_max ?? 'N/A'}</TableCell>
+                                    <TableCell align="right">{data.ph ?? 'N/A'}</TableCell>
+                                    <TableCell align="right">{data.radiacion ?? 'N/A'}</TableCell>
                                 </TableRow>
                             ))}
-
-                            {emptyRows > 0 && (
-                                <TableRow style={{ height: 53 * emptyRows }}>
-                                    <TableCell colSpan={6} />
-                                </TableRow>
-                            )}
                         </TableBody>
+
                         <TableFooter>
                             <TableRow>
                                 <TablePagination
@@ -245,25 +236,49 @@ export default function TablaMensual() {
                 </TableContainer>
 
                 <Dialog open={!!selectedRow} onClose={handleCloseModal} fullWidth maxWidth="md">
-                    <DialogTitle>Detalles del día {selectedRow?.fecha}</DialogTitle>
+                    <DialogTitle>Detalles del día {new Date(selectedRow?.fecha).toLocaleDateString()}</DialogTitle>
                     <DialogContent>
-                        <Typography variant="subtitle1">Humedad por hora</Typography>
+                        <Typography variant="subtitle1">Valores por Hora</Typography>
                         <Box height={250}>
+
+                            <Box sx={{ display: "flex", justifyContent: "center", flexDirection: "row", gap: 1, mt: 2 }}>
+                                <Button variant={parametroSeleccionado === "humedad" ? "contained" : "outlined"} size="small" sx={{ width: "auto", height: "25px" }} onClick={() => setParametroSeleccionado("humedad")}>Humedad</Button>
+                                <Button variant={parametroSeleccionado === "temperatura" ? "contained" : "outlined"} size="small" sx={{ width: "auto", height: "25px" }} onClick={() => setParametroSeleccionado("temperatura")}>Temperatura</Button>
+                                <Button variant={parametroSeleccionado === "ph" ? "contained" : "outlined"} size="small" sx={{ width: "auto", height: "25px" }} onClick={() => setParametroSeleccionado("ph")}>pH</Button>
+                                <Button variant={parametroSeleccionado === "radiacion" ? "contained" : "outlined"} size="small" sx={{ width: "auto", height: "25px" }} onClick={() => setParametroSeleccionado("radiacion")}>Radiación Solar</Button>
+                            </Box>
+
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={selectedRow?.humedadPorHora.map((h, i) => ({ hora: `${i}:00`, humedad: h }))}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="hora" />
-                                    <YAxis />
-                                    <ChartTooltip />
-                                    <Line type="monotone" dataKey="humedad" stroke="#8884d8" activeDot={{ r: 8 }} />
-                                </LineChart>
+                                {selectedRow?.datosPorHora?.length > 0 ? (
+
+                                    <LineChart data={selectedRow.datosPorHora.map((dato) => ({
+                                        hora: `${dato.hora}:00`,
+                                        valor: dato[parametroSeleccionado]
+                                    }))}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="hora" />
+                                        <YAxis />
+                                        <ChartTooltip />
+                                        <Line type="monotone" dataKey="valor" stroke="#8884d8" activeDot={{ r: 8 }} />
+                                    </LineChart>
+
+                                ) : (
+                                    <Typography variant="subtitle1" sx={{ textAlign: "center", mt: 2 }}>
+                                        No hay datos por hora disponibles.
+                                    </Typography>
+                                )}
+
+
+
                             </ResponsiveContainer>
+
                         </Box>
                         <TextField
                             fullWidth
                             multiline
                             rows={4}
-                            label="Comentarios"
+                            label="Observaciones del día"
+                            placeholder="Anota eventos importantes, condiciones del clima, posibles problemas detectados o cualquier información relevante para el análisis futuro."
                             value={selectedRow?.comentario || ''}
                             onChange={handleComentarioChange}
                             sx={{ mt: 2 }}
