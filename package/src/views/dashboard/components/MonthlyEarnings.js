@@ -1,75 +1,67 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import {
+  Typography,
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { Typography } from '@mui/material';
+import PageContainer from 'src/components/container/PageContainer';
 import DashboardCard from '../../../components/shared/DashboardCard';
+import { useEffect } from 'react';
+import axios from 'axios';
 import Chart from 'react-apexcharts';
-import { DataSensorContext } from '../../../context/dataSensorContext'; // Importa el contexto
 
-const MonthlyEarnings = () => {
-  // Usa el contexto para obtener los datos del sensor
-  const sensorData = useContext(DataSensorContext);
-  const { humedad } = sensorData;
-
-  // Estado para almacenar el registro histórico de la humedad por horas
-  const [hourlyHumidity, setHourlyHumidity] = useState(Array(24).fill(null));
-
-  // Estado para el color de fondo dinámico del gráfico
+export default function TablaMensual() {
+  const [historicalData, setHistoricalData] = useState([]);
   const [chartBackgroundColor, setChartBackgroundColor] = useState('#ffffff');
 
-  // Actualizar el registro histórico y el fondo del gráfico cada vez que cambie la humedad
   useEffect(() => {
-    const currentHour = new Date().getHours();
-    const updatedHourlyHumidity = [...hourlyHumidity];
-    updatedHourlyHumidity[currentHour] = humedad; // Guardar la humedad actual en la hora correspondiente
-    setHourlyHumidity(updatedHourlyHumidity);
+    const fetchDataForToday = async () => {
+      try {
+        const today = new Date().toISOString().split('T')[0]; // 📌 Obtiene la fecha actual
+        console.log("Obteniendo datos para:", today);
 
-    // Determinar el color de fondo basado en la humedad actual
-    let color;
-    if (humedad >= 0 && humedad <= 20) {
-      color = '#5a3a32';
-    } else if (humedad >= 21 && humedad <= 40) {
-      color = '#b67636';
-    } else if (humedad >= 41 && humedad <= 60) {
-      color = '#cfae7f';
-    } else if (humedad >= 61 && humedad <= 80) {
-      color = '#e9eced';
-    } else if (humedad >= 81 && humedad <= 100) {
-      color = '#53525d';
-    } else {
-      color = '#ffffff'; // Fondo blanco por defecto
+        const response = await axios.get(`http://localhost:5000/api/sensor-history/${today}`);
+        console.log("Datos de hoy:", response.data);
+
+        setHistoricalData(response.data);
+      } catch (error) {
+        console.error("Error al obtener datos del día actual:", error);
+      }
+    };
+
+    fetchDataForToday();
+  }, []);
+
+  // 📌 Determinar el color de fondo basado en la humedad más reciente
+  useEffect(() => {
+    if (historicalData.length > 0) {
+      const humedadActual = parseFloat(historicalData[historicalData.length - 1].humedad);
+      let color;
+      if (humedadActual >= 0 && humedadActual <= 20) {
+        color = '#5a3a32';
+      } else if (humedadActual >= 21 && humedadActual <= 40) {
+        color = '#b67636';
+      } else if (humedadActual >= 41 && humedadActual <= 60) {
+        color = '#cfae7f';
+      } else if (humedadActual >= 61 && humedadActual <= 80) {
+        color = '#e9eced';
+      } else if (humedadActual >= 81 && humedadActual <= 100) {
+        color = '#53525d';
+      } else {
+        color = '#ffffff';
+      }
+      setChartBackgroundColor(`linear-gradient(to bottom, ${color}, #ffffff)`);
     }
+  }, [historicalData]);
 
-    // Aplicar el degradado con el color seleccionado y el blanco
-    setChartBackgroundColor(`linear-gradient(to bottom, ${color}, #ffffff)`);
-  }, [humedad]);
+  // 📌 Extraer los datos del historial para el gráfico
+  const last8HoursData = historicalData.slice(-8).map(dato => Math.round(parseFloat(dato.humedad)));
+  const categories = historicalData.slice(-8).map(dato => `${dato.hora}:00`);
+  const currentHumidity = historicalData.length > 0
+    ? Math.round(parseFloat(historicalData[historicalData.length - 1].humedad))
+    : "Cargando...";
 
-  // Calcular la media de humedad por hora
-  const calculateHourlyAverage = () => {
-    const averages = [];
-    for (let hour = 0; hour < 24; hour++) {
-      const humidityValues = hourlyHumidity
-        .filter((value, index) => index === hour && value !== null); // Filtrar valores no nulos
-      const average = humidityValues.length > 0
-        ? (humidityValues.reduce((sum, value) => sum + value, 0) / humidityValues.length) // Paréntesis corregido
-        : null; // Calcular la media si hay datos
-      averages.push(average);
-    }
-    return averages;
-  };
-
-  // Obtener las últimas 8 horas y los datos de humedad
-  const categories = getLast8Hours();
-  const humidityData = calculateHourlyAverage(); // Usar la media por horas
-  const currentHour = new Date().getHours();
-  const currentHumidity = humidityData[currentHour] || humedad; // Mostrar la humedad actual si no hay media
-  const last8HoursData = getLast8HoursData(humidityData);
-
-  // chart color
+  // 📌 Configuración del gráfico con estilos visuales de `MonthlyEarnings`
   const theme = useTheme();
-  const primary = theme.palette.primary.main;
-  const secondary = theme.palette.secondary.main;
-
-  // chart
   const optionscolumnchart = {
     chart: {
       type: 'line',
@@ -79,15 +71,14 @@ const MonthlyEarnings = () => {
         show: true,
       },
       height: 370,
-      background: chartBackgroundColor, // Fondo del gráfico dinámico
+      background: chartBackgroundColor,
     },
-    colors: [primary, secondary],
+    colors: [theme.palette.primary.main, theme.palette.secondary.main],
     stroke: {
       show: true,
       curve: 'smooth',
       width: 2,
       lineCap: "butt",
-      colors: [primary, secondary],
     },
     dataLabels: {
       enabled: false,
@@ -121,49 +112,19 @@ const MonthlyEarnings = () => {
 
   const seriescolumnchart = [
     {
-      name: 'Humedad Diaria (%)',
-      data: last8HoursData,  // Mostrar las últimas 8 horas
+      name: 'Humedad por horas (%)',
+      data: last8HoursData,
     }
   ];
 
   return (
-    <DashboardCard title="Humedad (%): Sensor de Humedad">
-      <Typography variant="h4" gutterBottom>
-        Humedad Actual: {currentHumidity !== null ? `${currentHumidity.toFixed(2)} %` : 'Cargando...'}
-      </Typography>
-      <Chart
-        options={optionscolumnchart}
-        series={seriescolumnchart}
-        type="line"
-        height="370px"
-      />
-    </DashboardCard>
+    <PageContainer title="Historial" description="Visualización del historial de humedad">
+      <DashboardCard title="Historial de Humedad">
+        <Typography variant="h4" gutterBottom>
+          Humedad Actual: {currentHumidity} %
+        </Typography>
+        <Chart options={optionscolumnchart} series={seriescolumnchart} type="line" height="370px" />
+      </DashboardCard>
+    </PageContainer>
   );
-};
-
-// Funciones para obtener las últimas 8 horas y los datos de humedad
-
-function getLast8Hours() {
-  const hours = [];
-  const currentHour = new Date().getHours();
-
-  for (let i = 7; i >= 0; i--) {
-    let hour = (currentHour - i + 24) % 24;
-    hours.push(hour > 9 ? `${hour}:00` : `0${hour}:00`);
-  }
-
-  return hours;
 }
-
-function getLast8HoursData(data) {
-  const currentHour = new Date().getHours();
-  const last8HoursData = [];
-  for (let i = 7; i >= 0; i--) {
-    const hourIndex = (currentHour - i + 24) % 24;
-    const value = data[hourIndex] !== null && data[hourIndex] !== undefined ? data[hourIndex] : last8HoursData[last8HoursData.length - 1] || 0;
-    last8HoursData.push(value);
-  }
-  return last8HoursData;
-}
-
-export default MonthlyEarnings;
