@@ -1,5 +1,6 @@
 import React, { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
+import ProtectedRoute from '../components/ProtectedRoute';
 import Loadable from '../layouts/full/shared/loadable/Loadable';
 
 
@@ -30,7 +31,7 @@ const Router = [
     element: <FullLayout />,
     children: [
       { path: '/', element: <Navigate to="/auth/login" /> },
-      { path: '/dashboard', exact: true, element: <Dashboard /> },
+      { path: '/dashboard', exact: true, element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
       { path: '/sample-page', exact: true, element: <SamplePage /> },
       { path: '/sensores', exact: true, element: <Sensores /> },
       { path: '/icons', exact: true, element: <Icons /> },

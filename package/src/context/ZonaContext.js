@@ -6,19 +6,23 @@ const ZonaContext = createContext();
 
 export const ZonaProvider = ({ children }) => {
     const [zonas, setZonas] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Obtener zonas al cargar el componente
-    useEffect(() => {
-        const fetchZonas = async () => {
-            try {
-                const data = await zonaService.getAll();
-                setZonas(data);
-            } catch (error) {
-                console.error('Error al obtener zonas:', error);
-            }
-        };
-        fetchZonas();
+    const fetchZonas = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await zonaService.getAll();
+            setZonas(data);
+        } catch (error) {
+            console.error('Error al obtener zonas:', error);
+        } finally {
+            setLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchZonas();
+    }, [fetchZonas]);
 
     const handleAddZone = useCallback(async (newZone) => {
         try {
@@ -32,28 +36,23 @@ export const ZonaProvider = ({ children }) => {
     const handleRemoveZone = useCallback(async (id) => {
         try {
             await zonaService.delete(id);
-            setZonas(prevZonas => prevZonas.filter(zona => zona.id !== id));
+            fetchZonas(); // Actualizar estado tras eliminación
         } catch (error) {
             console.error('Error al eliminar zona:', error);
         }
-    }, []);
+    }, [fetchZonas]);
 
     const handleUpdateZone = useCallback(async (id, updatedData) => {
         try {
-            const updatedZone = await zonaService.update(id, updatedData);
-            setZonas(prevZonas => prevZonas.map(zona => (zona.id === id ? updatedZone : zona)));
+            await zonaService.update(id, updatedData);
+            fetchZonas(); // Refrescar datos tras actualización
         } catch (error) {
             console.error('Error al actualizar zona:', error);
         }
-    }, []);
+    }, [fetchZonas]);
 
     return (
-        <ZonaContext.Provider value={{ 
-            zonas, 
-            handleAddZone, 
-            handleRemoveZone, 
-            handleUpdateZone 
-        }}>
+        <ZonaContext.Provider value={{ zonas, loading, handleAddZone, handleRemoveZone, handleUpdateZone }}>
             {children}
         </ZonaContext.Provider>
     );

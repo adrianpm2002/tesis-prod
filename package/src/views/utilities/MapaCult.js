@@ -12,7 +12,11 @@ const greenColors = [
 ];
 
 const SamplePage = () => {
-    const { zonas } = useZonas();
+    const { zonas, loading } = useZonas();
+
+    if (loading) {
+        return <Typography>Cargando datos...</Typography>;
+    }
 
     // Mapa para asignar colores a zonas
     const colorMap = {};
@@ -119,7 +123,7 @@ const SamplePage = () => {
         return { assignedQuadrants, smallQuadrantsArr, mediumQuadrantsArr, largeQuadrantsArr };
     };
 
-    const { smallQuadrantsArr, mediumQuadrantsArr, largeQuadrantsArr } = assignQuadrants();
+    const { smallQuadrantsArr, mediumQuadrantsArr, largeQuadrantsArr } = assignQuadrants(zonas);
 
     // Componente para renderizar cuadrantes
     const renderQuadrant = (quadrant, index, size) => {
@@ -167,75 +171,24 @@ const SamplePage = () => {
 
     return (
         <PageContainer title="Casa de Cultivo" description="Mapa de la casa de cultivo">
-            <DashboardCard title="Mapa de la Casa de Cultivo">
-                <Box
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: 'repeat(1, 1fr)',
-                            sm: 'repeat(2, 1fr)',
-                            md: 'repeat(3, 1fr)',
-                        },
-                        gap: 1,
-                        mt: 4,
-                        overflowY: 'auto',
-                        maxHeight: '800px',
-                    }}
-                >
-                    {/* Cuadrantes pequeños */}
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(4, 1fr)',
-                            gridTemplateRows: 'repeat(11, 1fr)',
-                            gap: 1,
-                            border: '1px solid black',
-                            p: 1,
-                            height: '100%',
-                        }}
-                    >
-                        {smallQuadrantsArr.map((quadrant, index) => 
-                            renderQuadrant(quadrant, index, 'small')
-                        )}
-                    </Box>
-
-                    {/* Cuadrantes medianos */}
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
-                            gridTemplateRows: 'repeat(8, 1fr)',
-                            gap: 1,
-                            border: '1px solid black',
-                            p: 1,
-                            height: '100%',
-                        }}
-                    >
-                        {mediumQuadrantsArr.map((quadrant, index) => 
-                            renderQuadrant(quadrant, index, 'medium')
-                        )}
-                    </Box>
-
-                    {/* Cuadrantes grandes */}
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gridTemplateRows: 'repeat(5, 1fr)',
-                            gap: 1,
-                            border: '1px solid black',
-                            p: 1,
-                            height: '100%',
-                        }}
-                    >
-                        {largeQuadrantsArr.map((quadrant, index) => 
-                            renderQuadrant(quadrant, index, 'large')
-                        )}
-                    </Box>
+        <DashboardCard title="Mapa de la Casa de Cultivo">
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1, mt: 4, overflowY: 'auto', maxHeight: '800px' }}>
+                
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(11, 1fr)', gap: 1, border: '1px solid black', p: 1, height: '100%' }}>
+                    {smallQuadrantsArr.map((quadrant, index) => renderQuadrant(quadrant, index, 'small'))}
                 </Box>
-                <Typography>Casa de Cultivo de 20m x 10m dividida en cuadrantes</Typography>
-            </DashboardCard>
-        </PageContainer>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(8, 1fr)', gap: 1, border: '1px solid black', p: 1, height: '100%' }}>
+                    {mediumQuadrantsArr.map((quadrant, index) => renderQuadrant(quadrant, index, 'medium'))}
+                </Box>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gap: 1, border: '1px solid black', p: 1, height: '100%' }}>
+                    {largeQuadrantsArr.map((quadrant, index) => renderQuadrant(quadrant, index, 'large'))}
+                </Box>
+            </Box>
+            <Typography>Casa de Cultivo de 20m x 10m dividida en cuadrantes</Typography>
+        </DashboardCard>
+    </PageContainer>
     );
 };
 

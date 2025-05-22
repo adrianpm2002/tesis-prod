@@ -130,4 +130,8 @@ export const zonaService = {
       throw handleApiError(error);
     }
   }
+
+
 };
+
+axios.defaults.timeout = 5000; // Máximo tiempo de espera de 5s
