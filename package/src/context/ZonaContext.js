@@ -12,6 +12,7 @@ export const ZonaProvider = ({ children }) => {
         setLoading(true);
         try {
             const data = await zonaService.getAll();
+            console.log("Datos obtenidos de zonas:", data);
             setZonas(data);
         } catch (error) {
             console.error('Error al obtener zonas:', error);
@@ -23,6 +24,7 @@ export const ZonaProvider = ({ children }) => {
     useEffect(() => {
         fetchZonas();
     }, [fetchZonas]);
+    
 
     const handleAddZone = useCallback(async (newZone) => {
         try {
