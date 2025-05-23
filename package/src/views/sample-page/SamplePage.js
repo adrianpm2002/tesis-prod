@@ -29,31 +29,44 @@ const Alarmas = () => {
   const [filterType, setFilterType] = useState('');
   const isSmallScreen = useMediaQuery('(max-width:600px)');
 
-  // Ejemplo de datos de alertas
+
+
   useEffect(() => {
-    if (zonas.length > 0) {
-      setAlerts([
-        {
-          id: 1,
-          type: 'Humedad Alta',
-          zone: zonas[0].nombre,
-          date: '2025-01-27',
-          time: '10:00 AM',
-          description: 'El nivel de humedad ha superado el límite establecido.',
-          severity: 'crítica',
-        },
-        {
-          id: 2,
-          type: 'Cosecha',
-          zone: zonas[0]?.nombre || '',
-          date: '2025-01-26',
-          time: '09:00 AM',
-          description: 'Es tiempo de cosechar los cultivos.',
-          severity: 'aviso',
-        },
-      ]);
-    }
-  }, [zonas]);
+    // ✅ Obtener solo las alertas activas
+    fetch("http://localhost:3000/api/alertas")
+        .then((res) => res.json())
+        .then((data) => {
+            console.log("Datos recibidos en frontend:", data);
+            if (Array.isArray(data)) {
+                setAlerts(data);
+            } else {
+                console.error("La API no devolvió un array:", data);
+                setAlerts([]);
+            }
+        })
+        .catch((err) => {
+            console.error("Error obteniendo alertas:", err);
+            setAlerts([]);
+        });
+
+    // ✅ Obtener alertas archivadas
+    fetch("http://localhost:3000/api/alertas-archivadas")
+        .then((res) => res.json())
+        .then((data) => {
+            console.log("Alertas archivadas recibidas:", data);
+            if (Array.isArray(data)) {
+                setArchivedAlerts(data);
+            } else {
+                console.error("La API no devolvió un array de archivadas:", data);
+                setArchivedAlerts([]);
+            }
+        })
+        .catch((err) => {
+            console.error("Error obteniendo alertas archivadas:", err);
+            setArchivedAlerts([]);
+        });
+}, []);
+
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -63,54 +76,54 @@ const Alarmas = () => {
     setFilterType(event.target.value);
   };
 
-  const handleArchive = (id) => {
-    setArchivedAlerts([...archivedAlerts, ...alerts.filter(alert => alert.id === id)]);
-    setAlerts(alerts.filter(alert => alert.id !== id));
-  };
+  const handleArchive = async (id) => {
+    try {
+        const response = await fetch(`http://localhost:3000/api/alertas/${id}/archivar`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+        });
+
+        const data = await response.json();
+        console.log("Respuesta del backend:", data);
+
+        if (response.ok) {
+            setAlerts(alerts.filter(alert => alert.id !== id));
+            setArchivedAlerts([...archivedAlerts, alerts.find(alert => alert.id === id)]);
+        }
+    } catch (error) {
+        console.error("❌ Error al archivar alerta:", error);
+    }
+};
+
+
 
   const filteredAlerts = alerts.filter(alert =>
-    alert.type.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (filterType ? alert.type === filterType : true)
+    alert.tipo?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (filterType ? alert.tipo === filterType : true)
   );
+
+  const getZonaNombre = (zonaId) => {
+    const zonaEncontrada = zonas.find(zona => zona.id === zonaId);
+    return zonaEncontrada ? zonaEncontrada.nombre : `Zona desconocida (${zonaId})`;
+  };
+  
+
 
   return (
     <PageContainer title="Alarmas" description="Registro de alertas del sistema">
       <DashboardCard title="Registro de Alertas">
-        <Box display="flex" flexDirection={isSmallScreen ? 'column' : 'row'} gap={2} marginBottom="1rem">
-          <TextField
-            label="Buscar..."
-            variant="outlined"
-            value={searchTerm}
-            onChange={handleSearch}
-            fullWidth
-          />
-          <FormControl variant="outlined" fullWidth>
-            <InputLabel id="filter-type-label">Filtrar por tipo</InputLabel>
-            <Select
-              labelId="filter-type-label"
-              value={filterType}
-              onChange={handleFilter}
-              label="Filtrar por tipo"
-            >
-              <MenuItem value="">
-                <em>Todos</em>
-              </MenuItem>
-              <MenuItem value="Humedad Alta">Humedad Alta</MenuItem>
-              <MenuItem value="Cosecha">Cosecha</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+        
+
         {isSmallScreen ? (
-          // Vista para dispositivos móviles (tarjetas)
           <Box>
             {filteredAlerts.map(alert => (
-              <Paper key={alert.id} style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: alert.severity === 'crítica' ? '#ffe6e6' : '#e6ffe6' }}>
-                <Typography variant="body1" style={{ color: alert.severity === 'crítica' ? 'red' : 'green', fontWeight: 'bold' }}>
-                  {alert.type}
+              <Paper key={alert.id} style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#e6ffe6' }}>
+                <Typography variant="body1" style={{ fontWeight: 'bold' }}>
+                  {alert.tipo}
                 </Typography>
-                <Typography variant="body2">{alert.zone}</Typography>
-                <Typography variant="body2">{alert.date} - {alert.time}</Typography>
-                <Typography variant="body2">{alert.description}</Typography>
+                <Typography variant="body2">Zona: {getZonaNombre(alert.zona_id)}</Typography>
+                <Typography variant="body2">{new Date(alert.fecha).toLocaleString()}</Typography>
+                <Typography variant="body2">{alert.descripcion}</Typography>
                 <Box display="flex" justifyContent="flex-end" marginTop="1rem">
                   <Button variant="outlined" color="secondary" onClick={() => handleArchive(alert.id)}>
                     Archivar
@@ -123,7 +136,6 @@ const Alarmas = () => {
             )}
           </Box>
         ) : (
-          // Vista para pantallas grandes (tabla)
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
@@ -136,9 +148,6 @@ const Alarmas = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="h6">Fecha</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="h6">Hora</Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="h6">Descripción</Typography>
@@ -150,23 +159,18 @@ const Alarmas = () => {
               </TableHead>
               <TableBody>
                 {filteredAlerts.map(alert => (
-                  <TableRow key={alert.id} style={{ backgroundColor: alert.severity === 'crítica' ? '#ffe6e6' : '#e6ffe6' }}>
+                  <TableRow key={alert.id}>
                     <TableCell>
-                      <Typography variant="body1" style={{ color: alert.severity === 'crítica' ? 'red' : 'green' }}>
-                        {alert.type}
-                      </Typography>
+                      <Typography variant="body1">{alert.tipo}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body1">{alert.zone}</Typography>
+                      <Typography variant="body1">{getZonaNombre(alert.zona_id)}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body1">{alert.date}</Typography>
+                      <Typography variant="body1">{new Date(alert.fecha).toLocaleString()}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body1">{alert.time}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body1">{alert.description}</Typography>
+                      <Typography variant="body1">{alert.descripcion}</Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Button variant="outlined" color="secondary" onClick={() => handleArchive(alert.id)}>
@@ -177,7 +181,7 @@ const Alarmas = () => {
                 ))}
                 {filteredAlerts.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={5} align="center">
                       <Typography>No hay alertas registradas</Typography>
                     </TableCell>
                   </TableRow>
@@ -187,26 +191,9 @@ const Alarmas = () => {
           </TableContainer>
         )}
       </DashboardCard>
+
       <DashboardCard title="Alertas Archivadas" style={{ marginTop: '2rem' }}>
-        {isSmallScreen ? (
-          // Vista para dispositivos móviles (tarjetas)
-          <Box>
-            {archivedAlerts.map(alert => (
-              <Paper key={alert.id} style={{ marginBottom: '1rem', padding: '1rem' }}>
-                <Typography variant="body1" style={{ fontWeight: 'bold' }}>
-                  {alert.type}
-                </Typography>
-                <Typography variant="body2">{alert.zone}</Typography>
-                <Typography variant="body2">{alert.date} - {alert.time}</Typography>
-                <Typography variant="body2">{alert.description}</Typography>
-              </Paper>
-            ))}
-            {archivedAlerts.length === 0 && (
-              <Typography align="center">No hay alertas archivadas</Typography>
-            )}
-          </Box>
-        ) : (
-          // Vista para pantallas grandes (tabla)
+        {archivedAlerts.length > 0 ? (
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
@@ -221,9 +208,6 @@ const Alarmas = () => {
                     <Typography variant="h6">Fecha</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Hora</Typography>
-                  </TableCell>
-                  <TableCell>
                     <Typography variant="h6">Descripción</Typography>
                   </TableCell>
                 </TableRow>
@@ -232,32 +216,24 @@ const Alarmas = () => {
                 {archivedAlerts.map(alert => (
                   <TableRow key={alert.id}>
                     <TableCell>
-                      <Typography variant="body1">{alert.type}</Typography>
+                      <Typography variant="body1">{alert.tipo}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body1">{alert.zone}</Typography>
+                      <Typography variant="body1">{getZonaNombre(alert.zona_id)}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body1">{alert.date}</Typography>
+                      <Typography variant="body1">{new Date(alert.fecha).toLocaleString()}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body1">{alert.time}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body1">{alert.description}</Typography>
+                      <Typography variant="body1">{alert.descripcion}</Typography>
                     </TableCell>
                   </TableRow>
                 ))}
-                {archivedAlerts.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center">
-                      <Typography>No hay alertas archivadas</Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           </TableContainer>
+        ) : (
+          <Typography align="center">No hay alertas archivadas</Typography>
         )}
       </DashboardCard>
     </PageContainer>

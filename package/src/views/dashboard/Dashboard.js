@@ -21,9 +21,23 @@ const Dashboard = () => {
     // Puedes cargar datos adicionales o realizar otras acciones cuando cambie la zona seleccionada
   }, [selectedZona]);
 
-  const handleZoneChange = (event) => {
-    setSelectedZona(event.target.value);
-  };
+  const handleZoneChange = async (event) => {
+    const newSelectedZona = event.target.value;
+    setSelectedZona(newSelectedZona);
+
+    // ✅ Enviar la zona al backend
+    try {
+        await fetch("http://localhost:5000/api/selected-zone", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ selectedZona: newSelectedZona }),
+        });
+        console.log("✅ Zona actualizada en el servidor:", newSelectedZona);
+    } catch (error) {
+        console.error("❌ Error al actualizar la zona en el servidor:", error);
+    }
+};
+
 
   const handleCreateZone = () => {
     navigate('/zonaCultivo?create=true');
