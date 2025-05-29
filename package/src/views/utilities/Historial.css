@@ -33,10 +33,11 @@
 
 /* Días entre siembra y cosecha - verde claro tipo sombra */
 .entre-dias {
-  background-color: #d0f0c0 !important;
-  color: #2e7d32 !important;
-  font-weight: 500;
+  background-color: rgba(76, 175, 80, 0.2); /* ✅ Fondo verde claro */
+  position: relative; /* ✅ Asegurar que no cubra otros elementos */
+  z-index: 0; /* ✅ Mantenerlo por debajo de los íconos */
 }
+
 
 /* Estilo para el día actual */
 .current-day {
@@ -128,9 +129,8 @@
   color: white;
 }
 
-/* Indicadores de actividad */
 .activity-indicators {
-  position: absolute;
+  position: absolute; /* ✅ Asegurar que esté por encima */
   bottom: 2px;
   left: 0;
   right: 0;
@@ -138,8 +138,8 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: 2px;
+  z-index: 2; /* ✅ Colocar los iconos por encima */
 }
-
 .activity-dot {
   width: 16px;
   height: 16px;
@@ -148,6 +148,8 @@
   align-items: center;
   justify-content: center;
   cursor: default;
+  background-color: transparent; /* ✅ Evitar que el fondo afecte la visibilidad */
+  z-index: 3; /* ✅ Mantenerlo por encima */
 }
 
 .activity-dot svg {

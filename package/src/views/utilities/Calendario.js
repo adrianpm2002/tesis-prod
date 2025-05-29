@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -23,6 +23,15 @@ import 'react-calendar/dist/Calendar.css';
 import './Historial.css';
 import { useZonas } from '../../context/ZonaContext';
 import { useActivities } from '../../context/ActivitiesContext';
+import { activitiesService } from '../../services/activitiesService';
+
+
+
+
+
+
+
+
 
 // Iconos SVG personalizados
 const AutoIcon = () => (
@@ -63,61 +72,65 @@ const HarvestIcon = () => (
 
 // Tipos de actividades
 const TIPOS_ACTIVIDAD = [
-  {
-    value: 'riego',
-    label: 'Riego',
-    descripcion: 'Aplicación de agua al cultivo según sus necesidades hídricas. Puede ser manual o automático.',
-    requiereProducto: false,
-    color: '#42a5f5'
-  },
-  {
-    value: 'fertilizacion',
-    label: 'Fertilización',
-    descripcion: 'Aplicación de nutrientes para mejorar el crecimiento de las plantas.',
-    requiereProducto: true,
-    productoLabel: 'Fertilizante a utilizar',
-    color: '#66bb6a'
-  },
-  {
-    value: 'control_plagas',
-    label: 'Control de Plagas',
-    descripcion: 'Aplicación de pesticidas o métodos orgánicos para controlar plagas.',
-    requiereProducto: true,
-    productoLabel: 'Producto para control de plagas',
-    color: '#ef5350'
-  },
-  {
-    value: 'podas',
-    label: 'Podas',
-    descripcion: 'Eliminación de partes de la planta para mejorar su crecimiento o producción.',
-    requiereProducto: false,
-    color: '#ab47bc'
-  },
-  {
-    value: 'deshierbe',
-    label: 'Deshierbe',
-    descripcion: 'Eliminación de malezas que compiten por nutrientes con el cultivo.',
-    requiereProducto: false,
-    color: '#ffa726'
-  }
+  { value: 'riego', label: 'Riego', color: '#42a5f5' },
+  { value: 'fertilizacion', label: 'Fertilización', color: '#66bb6a' },
+  { value: 'control_plagas', label: 'Control de Plagas', color: '#ef5350' },
+  { value: 'podas', label: 'Podas', color: '#ab47bc' },
+  { value: 'deshierbe', label: 'Deshierbe', color: '#ffa726' }
 ];
 
+
+
+
+
+
+
 export default function Calendario() {
-  const { zonas } = useZonas();
-  const { activities, addActivity, deleteActivity } = useActivities();
+
+
+  const { activities, addActivity, deleteActivity, fetchActivities } = useActivities();
 
   const [date, setDate] = useState(new Date());
   const [openModal, setOpenModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedActivity, setSelectedActivity] = useState(null);
-  const [actividad, setActividad] = useState('');
-  const [zonaSeleccionada, setZonaSeleccionada] = useState('');
+  const { zonas, zonaSeleccionada, setZonaSeleccionada } = useZonas();
   const [tipoActividad, setTipoActividad] = useState('');
   const [horaActividad, setHoraActividad] = useState('08:00');
+  const [actividad, setActividad] = useState('');
   const [producto, setProducto] = useState('');
   const [automatico, setAutomatico] = useState(false);
   const [descripcionTipo, setDescripcionTipo] = useState('');
+
+  useEffect(() => {
+    if (zonaSeleccionada) {
+      fetchActivities(zonaSeleccionada).then((actividades) => {
+        
+      });
+    }
+  }, [zonaSeleccionada, fetchActivities]);
+
+
+
+  const getByZona = async (zonaId) => {
+    try {
+      const response = await axios.get(`${API_URL}/${zonaId}`, getAuthHeader());
+
+      if (response.status === 404) {
+        console.log("⚠ No hay actividades registradas para esta zona.");
+        return []; // ✅ Si la API devuelve 404, maneja la respuesta con un array vacío
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("🚨 Error al obtener actividades:", error);
+      throw handleApiError(error);
+    }
+  };
+
+  
+
 
   const handleDateChange = (newDate) => {
     setDate(newDate);
@@ -125,17 +138,23 @@ export default function Calendario() {
   };
 
   const handleOpenModal = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // No permitir agregar actividades en días pasados o después de cosecha
-    if (date < today || isAfterHarvest(date)) {
+    if (!zonaSeleccionada) return;
+  
+    const zona = zonas.find(z => z.id === zonaSeleccionada);
+    if (!zona) return;
+  
+    const { fechaSiembra, fechaCosecha } = getCultivoInfo(zona) || {};
+    if (!fechaSiembra || !fechaCosecha) return;
+  
+    if (date < fechaSiembra || date > fechaCosecha) {
+      console.warn("⚠ No se pueden agregar actividades fuera del período de cultivo.");
       return;
     }
-
+  
     setSelectedDate(date);
     setOpenModal(true);
   };
+  
 
   const isAfterHarvest = (date) => {
     if (!zonaSeleccionada) return false;
@@ -174,6 +193,7 @@ export default function Calendario() {
 
   const handleConfirmDelete = () => {
     if (selectedActivity) {
+      
       deleteActivity(selectedActivity.id);
       handleCloseDeleteModal();
     }
@@ -183,8 +203,8 @@ export default function Calendario() {
     setActividad(e.target.value);
   };
 
-  const handleZonaChange = (e) => {
-    setZonaSeleccionada(e.target.value);
+  const handleZonaChange = (event) => {
+    setZonaSeleccionada(event.target.value);
   };
 
   const handleTipoActividadChange = (e) => {
@@ -201,34 +221,46 @@ export default function Calendario() {
     }
   };
 
-  const handleGuardarActividad = () => {
+  const handleGuardarActividad = async () => {
     const nuevaActividad = {
-      id: Date.now(), // ID único temporal
       date: selectedDate,
       hora: horaActividad,
-      zona: zonaSeleccionada,
-      tipo: tipoActividad,
+      zona_id: zonaSeleccionada,
+      tipoActividad,
       descripcion: actividad,
-      producto: producto,
-      automatico: automatico,
-      estado: 'pendiente'
+      producto,
+      automatico
     };
-    addActivity(nuevaActividad);
-    handleCloseModal();
+
+    try {
+      await activitiesService.create(nuevaActividad); // 🚀 Guardar en la BD
+      fetchActivities(zonaSeleccionada); // 🔄 Recargar actividades desde la API
+      handleCloseModal(); // 🔄 Cerrar modal después de guardar
+    } catch (error) {
+      console.error('Error al guardar actividad:', error);
+    }
   };
+
 
   const getCultivoInfo = (zona) => {
-    if (!zona || !zona.fechaCultivo) return null;
-
-    const fechaSiembra = new Date(zona.fechaCultivo);
-    const tiempoCultivo = parseInt(zona.tiempoCultivo) || 0;
-
+    if (!zona || !zona.fecha_cultivo || !zona.tiempo_cultivo) {
+      console.warn("⚠ No se encontraron datos de siembra/cosecha para la zona:", zona);
+      return { fechaSiembra: null, fechaCosecha: null };
+    }
+  
+    const fechaSiembra = new Date(zona.fecha_cultivo); // ✅ Tomar el valor correctamente
+    if (isNaN(fechaSiembra.getTime())) {
+      console.error("❌ Error al convertir la fecha de cultivo:", zona.fecha_cultivo);
+      return { fechaSiembra: null, fechaCosecha: null };
+    }
+  
     const fechaCosecha = new Date(fechaSiembra);
-    fechaCosecha.setDate(fechaSiembra.getDate() + tiempoCultivo);
-
+    fechaCosecha.setDate(fechaSiembra.getDate() + parseInt(zona.tiempo_cultivo));
+  
+    
     return { fechaSiembra, fechaCosecha };
   };
-
+  
   const getDaysToHarvest = (date) => {
     if (!zonaSeleccionada) return null;
 
@@ -247,94 +279,141 @@ export default function Calendario() {
   };
 
   const getTileContent = ({ date, view }) => {
-    if (view !== 'month') return null;
+    if (view !== 'month' || !zonaSeleccionada) return null;
+
+    
 
     const zona = zonas.find((z) => z.id === zonaSeleccionada);
-    if (!zona) return null;
+    if (!zonaSeleccionada || !activities) return null;
 
-    const { fechaSiembra, fechaCosecha } = getCultivoInfo(zona) || {};
-    const actividadesDia = activities.filter(
-      (act) =>
-        act.zona === zonaSeleccionada &&
-        new Date(act.date).toDateString() === date.toDateString()
+    const { fechaSiembra, fechaCosecha } = getCultivoInfo(zona) || { fechaSiembra: null, fechaCosecha: null };
+
+    // ✅ Filtra actividades del día con comparación correcta de fechas
+    const actividadesDia = activities.filter((act) => {
+      const actDate = new Date(act.date);
+      return (
+        act.zona_id === zonaSeleccionada &&
+        actDate.getFullYear() === date.getFullYear() &&
+        actDate.getMonth() === date.getMonth() &&
+        actDate.getDate() === date.getDate()
+      );
+    });
+
+
+    // 🌱 Cultivado (inicio del ciclo)
+    if (fechaSiembra && fechaSiembra.getFullYear() === date.getFullYear() &&
+    fechaSiembra.getMonth() === date.getMonth() &&
+    fechaSiembra.getDate() === date.getDate()) {
+    return (
+        <Tooltip title={<div><strong>Día de Cultivo Iniciado</strong><Divider sx={{ my: 1 }} /></div>}>
+            <div className="special-day-icon"><SeedIcon /></div>
+        </Tooltip>
     );
-
-    const esSiembra = fechaSiembra?.toDateString() === date.toDateString();
-    const esCosecha = fechaCosecha?.toDateString() === date.toDateString();
+}
 
 
-
-    if (esSiembra) {
-      return (
-        <Tooltip title={
-          <div>
-            <strong>Día de Siembra</strong>
-            <Divider sx={{ my: 1 }} />
-
-          </div>
-        }>
-          <div className="special-day-icon">
-            <SeedIcon />
-          </div>
+    // 🌾 Cosecha
+    if (fechaCosecha && fechaCosecha.getFullYear() === date.getFullYear() &&
+    fechaCosecha.getMonth() === date.getMonth() &&
+    fechaCosecha.getDate() === date.getDate()) {
+    return (
+        <Tooltip title={<div><strong>Día de Cosecha</strong><Divider sx={{ my: 1 }} /></div>}>
+            <div className="special-day-icon"><HarvestIcon /></div>
         </Tooltip>
-      );
-    }
+    );
+}
 
-
-    if (esCosecha) {
-      return (
-        <Tooltip title={
-          <div>
-            <strong>Día de Cosecha</strong>
-            <Divider sx={{ my: 1 }} />
-
-
-          </div>
-        }>
-          <div className="special-day-icon">
-            <HarvestIcon />
-          </div>
-        </Tooltip>
-      );
-    }
-
-    if (actividadesDia.length > 0) {
-      return (
-        <div className="activity-indicators">
-          {actividadesDia.map((act, index) => {
-            const tipoInfo = TIPOS_ACTIVIDAD.find(t => t.value === act.tipo);
-            return (
-              <div
-                key={index}
-                className={`activity-dot ${act.tipo} ${act.automatico ? 'auto' : 'manual'}`}
-                style={{ backgroundColor: tipoInfo?.color ? `${tipoInfo.color}20` : '#ccc' }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Tooltip title={
-                  <div>
-                    <strong>{tipoInfo?.label}</strong>
+    // Días de cultivo intermedios
+if (fechaSiembra && fechaCosecha && fechaSiembra.getTime() < date.getTime() && date.getTime() < fechaCosecha.getTime()) {
+  return (
+    <div className="tile-content-wrapper">
+      <div className="entre-dias"></div> {/* ✅ Días de cultivo */}
+      <div className="activity-indicators">
+        {actividadesDia.map((act, index) => {
+          const tipoInfo = TIPOS_ACTIVIDAD.find(t => t.value === act.tipoactividad);
+          return (
+            <Tooltip
+                key={`actividad-${act.id || index}`}
+                title={
+                  <div style={{ padding: '10px', maxWidth: '250px' }}>
+                    <strong>{tipoInfo?.label || 'Actividad desconocida'}</strong>
                     <Divider sx={{ my: 1 }} />
                     <div>Hora: {act.hora}</div>
                     <div>Descripción: {act.descripcion}</div>
-                    {act.producto && <div>Producto: {act.producto}</div>}
+                    {act.producto ? <div>Producto: {act.producto}</div> : null}
                     <div>Tipo: {act.automatico ? 'Automático' : 'Manual'}</div>
                     <Button
                       variant="outlined"
                       color="error"
                       size="small"
                       startIcon={<DeleteIcon />}
-                      onClick={(e) => handleOpenDeleteModal(act, e)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // ✅ Evita que el Tooltip se cierre al hacer clic
+                        handleOpenDeleteModal(act, e);
+                      }}
+                      sx={{ mt: 1 }}
+                    >
+                      Eliminar
+                    
+                    </Button>
+                  </div>
+                }
+                sx={{ maxWidth: 250 }} // ✅ Limita el tamaño para evitar que se corte
+              >
+                <span>
+                  {act.automatico ? <AutoIcon /> : <ManualIcon />}
+                </span>
+              </Tooltip>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+
+
+    // ✅ Mostrar actividades del día
+    if (actividadesDia.length > 0) {
+      return (
+        <div className="activity-indicators">
+          {actividadesDia.map((act, index) => {
+            const tipoInfo = TIPOS_ACTIVIDAD.find(t => t.value === act.tipoActividad || t.value === act.tipoactividad);
+           
+
+            return (
+              <Tooltip
+                key={`actividad-${act.id || index}`}
+                title={
+                  <div style={{ padding: '10px', maxWidth: '250px' }}>
+                    <strong>{tipoInfo?.label || 'Actividad desconocida'}</strong>
+                    <Divider sx={{ my: 1 }} />
+                    <div>Hora: {act.hora}</div>
+                    <div>Descripción: {act.descripcion}</div>
+                    {act.producto ? <div>Producto: {act.producto}</div> : null}
+                    <div>Tipo: {act.automatico ? 'Automático' : 'Manual'}</div>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      startIcon={<DeleteIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation(); // ✅ Evita que el Tooltip se cierre al hacer clic
+                        handleOpenDeleteModal(act, e);
+                      }}
                       sx={{ mt: 1 }}
                     >
                       Eliminar
                     </Button>
                   </div>
-                }>
-                  <span>
-                    {act.automatico ? <AutoIcon /> : <ManualIcon />}
-                  </span>
-                </Tooltip>
-              </div>
+                }
+                sx={{ maxWidth: 250 }} // ✅ Limita el tamaño para evitar que se corte
+              >
+                <span>
+                  {act.automatico ? <AutoIcon /> : <ManualIcon />}
+                </span>
+              </Tooltip>
+
             );
           })}
         </div>
@@ -343,6 +422,9 @@ export default function Calendario() {
 
     return null;
   };
+
+
+
 
   const getTileClassName = ({ date, view }) => {
     const today = new Date();

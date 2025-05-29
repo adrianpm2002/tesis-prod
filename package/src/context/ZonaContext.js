@@ -1,18 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { zonaService } from "../services/zonaSevices";
+
 // Asegúrate de que la ruta sea correcta
 
 const ZonaContext = createContext();
 
 export const ZonaProvider = ({ children }) => {
     const [zonas, setZonas] = useState([]);
+    const [zonaSeleccionada, setZonaSeleccionada] = useState(''); // 👈 Agregado
     const [loading, setLoading] = useState(true);
 
     const fetchZonas = useCallback(async () => {
         setLoading(true);
         try {
             const data = await zonaService.getAll();
-            console.log("Datos obtenidos de zonas:", data);
+            
             setZonas(data);
         } catch (error) {
             console.error('Error al obtener zonas:', error);
@@ -54,7 +56,7 @@ export const ZonaProvider = ({ children }) => {
     }, [fetchZonas]);
 
     return (
-        <ZonaContext.Provider value={{ zonas, loading, handleAddZone, handleRemoveZone, handleUpdateZone }}>
+        <ZonaContext.Provider value={{ zonas, zonaSeleccionada, setZonaSeleccionada, loading }}>
             {children}
         </ZonaContext.Provider>
     );

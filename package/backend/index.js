@@ -6,6 +6,7 @@ const zonasRoutes = require('./routes/zonasRoutes');
 const sensorsRoutes = require('./routes/sensorsRoutes');
 const authRoutes = require('./routes/authRoutes'); // Importamos la ruta de autenticación
 const alertasRouter = require("./routes/alertas");
+const activitiesRoutes = require('./routes/activitiesRoutes');  // ✅ Importa las rutas de actividades
 
 const app = express();
 const PORT = 3000;
@@ -19,6 +20,7 @@ app.use('/api/zonas', zonasRoutes);
 app.use('/api/sensores', sensorsRoutes);
 app.use('/api/auth', authRoutes); // Agregamos la ruta de autenticación
 app.use(alertasRouter);
+app.use('/api/actividades', activitiesRoutes); // ✅ Agregar esta línea
 // Manejador de errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
