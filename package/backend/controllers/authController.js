@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const registerUser = async (req, res) => {
     const { name, email, password } = req.body;
 
-   
+
 
 
     try {
@@ -68,18 +68,17 @@ const loginUser = async (req, res) => {
 
 app.post('/api/auth/refresh', (req, res) => {
     try {
-      const refreshToken = req.headers.authorization?.split(" ")[1]; // Obtener el token del header
-      const decoded = jwt.verify(refreshToken, SECRET_KEY);
-  
-      // Crear nuevo token con más tiempo de vida
-      const newToken = jwt.sign({ id: decoded.id }, SECRET_KEY, { expiresIn: '1h' });
-  
-      res.json({ token: newToken });
+        const refreshToken = req.headers.authorization?.split(" ")[1]; // Obtener el token del header
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+        const newToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+
+        res.json({ token: newToken });
     } catch (error) {
-      res.status(401).json({ message: "Token inválido o expirado" });
+        res.status(401).json({ message: "Token inválido o expirado" });
     }
-  });
-  
+});
+
 
 module.exports = { registerUser, loginUser };
 

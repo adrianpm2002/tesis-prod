@@ -23,17 +23,22 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
         e.preventDefault();
         setError('');
         setIsLoading(true);
-
+    
         console.log('Datos enviados:', formData);
-
+    
         try {
             const data = await loginUser(formData);
-
-            if (data.token) {
+    
+            // ✅ Verificar el token recibido antes de guardarlo
+            console.log("🔐 Token recibido del backend:", data.token);
+    
+            if (data.token && typeof data.token === 'string' && data.token.length > 10) {
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user)); // ✅ Guardar el usuario completo
                 navigate('/dashboard'); // Redirigir a la página principal
             } else {
-                setError('Credenciales incorrectas');
+                setError('Credenciales incorrectas o token inválido');
+                console.error("🚨 Token recibido es inválido:", data.token);
             }
         } catch (err) {
             setError(err.message || 'Error al iniciar sesión');

@@ -26,8 +26,10 @@ export const UserProvider = ({ children }) => {
 
     if (token && !isUserLoaded) {
       fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      })
+        headers: { 
+            'Authorization': `Bearer ${localStorage.getItem('token')}` // ✅ Confirma que se envía con "Bearer "
+        }
+    })
         .then(res => res.json())
         .then(data => {
           if (data.name && data.email) {
