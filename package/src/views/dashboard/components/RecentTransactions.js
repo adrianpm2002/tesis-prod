@@ -113,7 +113,7 @@ export default function TablaMensual() {
   ];
 
   return (
-    <PageContainer title="Historial" description="Visualización del historial de temperatura">
+    <PageContainer title="Panel de Control" description="Visualización del historial de temperatura">
       <DashboardCard
         title="Temperatura (°C): Sensor de Temperatura"
         footer={

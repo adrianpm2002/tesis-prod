@@ -138,7 +138,7 @@ export default function TablaMensual() {
   ];
 
   return (
-    <PageContainer title="Historial" description="Visualización del historial de humedad">
+    <PageContainer title="Panel de Control" description="Visualización del historial de humedad">
       <DashboardCard title="Historial de Humedad">
         <Typography variant="h4" gutterBottom>
           Humedad Actual: {currentHumidity} %

@@ -113,7 +113,7 @@ export default function TablaMensual() {
   ];
 
   return (
-    <PageContainer title="Historial" description="Visualización del historial de radiación solar">
+    <PageContainer title="Panel de Control" description="Visualización del historial de radiación solar">
       <DashboardCard
         title="Radiación Solar (W/m²): Sensor de Radiación Solar"
         footer={

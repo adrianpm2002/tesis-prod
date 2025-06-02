@@ -101,7 +101,7 @@ const UserProfileForm = () => {
 
   return (
 
-    <Container maxWidth="sm">
+    <Container  title="Datos del Usuario" maxWidth="sm">
       <Box sx={{ mt: 4, textAlign: 'center' }}>
         <Typography variant="h4">Perfil de Usuario</Typography>
       </Box>
