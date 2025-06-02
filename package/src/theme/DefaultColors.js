@@ -7,7 +7,7 @@ const baselightTheme = createTheme({
   palette: {
     primary: {
       main: '#008F39',
-      light: '70b578',
+      light: '#70b578',
       dark: '#4570EA',
     },
     secondary: {
