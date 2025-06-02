@@ -3,7 +3,7 @@ import { Grid, Box, MenuItem, FormControl, InputLabel, Select, Typography, Butto
 import { useNavigate } from 'react-router-dom';
 import PageContainer from 'src/components/container/PageContainer';
 import { useZonas } from '../../context/ZonaContext';
-import Logo from 'src/assets/images/logos/LOGO.png'; // Asegúrate de ajustar la ruta de importación
+import Logo from 'src/assets/images/logos/LOGO.png'; 
 
 // Components
 import SalesOverview from './components/SalesOverview';
@@ -15,36 +15,51 @@ import MonthlyEarnings from './components/MonthlyEarnings';
 const Dashboard = () => {
   const { zonas } = useZonas();
   const [selectedZona, setSelectedZona] = useState(zonas[0]?.id || '');
+  const [sensoresConectados, setSensoresConectados] = useState(true);
   const navigate = useNavigate();
 
+  // 📌 Verificar el estado de los sensores en el backend
   useEffect(() => {
-    // Puedes cargar datos adicionales o realizar otras acciones cuando cambie la zona seleccionada
-  }, [selectedZona]);
+    const verificarEstadoSensores = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/sensores-estado");
+        const data = await response.json();
+        setSensoresConectados(data.sensoresConectados);
+      } catch (error) {
+        console.error("❌ Error al verificar estado de sensores:", error);
+        setSensoresConectados(false);
+      }
+    };
 
+    verificarEstadoSensores();
+    const interval = setInterval(verificarEstadoSensores, 5000); // Verificar cada 5 segundos
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 📌 Actualizar la zona seleccionada
   const handleZoneChange = async (event) => {
     const newSelectedZona = event.target.value;
     setSelectedZona(newSelectedZona);
 
-    // ✅ Enviar la zona al backend
     try {
-        await fetch("http://localhost:5000/api/selected-zone", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ selectedZona: newSelectedZona }),
-        });
-        console.log("✅ Zona actualizada en el servidor:", newSelectedZona);
+      await fetch("http://localhost:5000/api/selected-zone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedZona: newSelectedZona }),
+      });
+      console.log("✅ Zona actualizada en el servidor:", newSelectedZona);
     } catch (error) {
-        console.error("❌ Error al actualizar la zona en el servidor:", error);
+      console.error("❌ Error al actualizar la zona en el servidor:", error);
     }
-};
-
+  };
 
   const handleCreateZone = () => {
     navigate('/zonaCultivo?create=true');
   };
 
   return (
-    <PageContainer title="Dashboard" description="this is Dashboard">
+    <PageContainer title="Dashboard" description="Monitoreo del sistema agrícola">
       <Box>
         {zonas.length > 0 ? (
           <>
@@ -65,30 +80,31 @@ const Dashboard = () => {
               </Select>
             </FormControl>
 
-            {selectedZona ? (
-              <Grid container spacing={3}>
-                {/* MonthlyEarnings ocupa todo el ancho y tiene un tamaño más grande */}
-                <Grid item xs={12}>
-                  <MonthlyEarnings zonaId={selectedZona} />
-                </Grid>
-
-                {/* Los otros tres componentes se muestran uno al lado del otro */}
-                <Grid item xs={12} container spacing={3}>
-                  <Grid item xs={12} md={4}>
-                    <RecentTransactions zonaId={selectedZona} />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <YearlyBreakup zonaId={selectedZona} />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <ProductPerformance zonaId={selectedZona} />
+            {/* 🔎 Verificar si los sensores están conectados */}
+            {sensoresConectados ? (
+              selectedZona ? (
+                <Grid container spacing={3}>
+                  <Grid item xs={12}><MonthlyEarnings zonaId={selectedZona} /></Grid>
+                  <Grid item xs={12} container spacing={3}>
+                    <Grid item xs={12} md={4}><RecentTransactions zonaId={selectedZona} /></Grid>
+                    <Grid item xs={12} md={4}><YearlyBreakup zonaId={selectedZona} /></Grid>
+                    <Grid item xs={12} md={4}><ProductPerformance zonaId={selectedZona} /></Grid>
                   </Grid>
                 </Grid>
-              </Grid>
+              ) : (
+                <Typography variant="h6" sx={{ color: 'gray', marginTop: 3 }}>
+                  Por favor selecciona una zona de cultivo para ver los datos.
+                </Typography>
+              )
             ) : (
-              <Typography variant="h6" sx={{ color: 'gray', marginTop: 3 }}>
-                Por favor selecciona una zona de cultivo para ver los datos.
-              </Typography>
+              <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="80vh">
+                <Typography variant="h4" sx={{ color: 'red', textAlign: 'center', marginBottom: '20px' }}>
+                  ⚠ Sistema de sensores no conectado
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'gray', textAlign: 'center', marginBottom: '40px' }}>
+                  Conecte el sistema de sensores para visualizar los datos del cultivo. Mientras tanto, puede gestionar zonas y realizar otras tareas administrativas.
+                </Typography>
+              </Box>
             )}
           </>
         ) : (
