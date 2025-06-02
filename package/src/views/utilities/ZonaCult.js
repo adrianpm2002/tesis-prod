@@ -351,8 +351,8 @@ const ZonaCultivo = () => {
         validationSchema: parametrosSchema,
         onSubmit: async (values) => {
             try {
-                const zonaCompleta = { 
-                    ...tempBasicData, 
+                const zonaCompleta = {
+                    ...tempBasicData,
                     ...values,
                     // Convertir campos vacíos a null para el backend
                     acidez_min: values.acidez_min === '' ? null : values.acidez_min,
@@ -364,7 +364,7 @@ const ZonaCultivo = () => {
                     radiacion_min: values.radiacion_min === '' ? null : values.radiacion_min,
                     radiacion_max: values.radiacion_max === '' ? null : values.radiacion_max
                 };
-                
+
                 if (editingIndex !== null) {
                     await handleUpdateZone(zonas[editingIndex].id, zonaCompleta);
                 } else {
@@ -445,7 +445,7 @@ const ZonaCultivo = () => {
                 id: 'acciones',
                 header: 'Acciones',
                 cell: ({ row }) => (
-                    <Stack direction="row" spacing={1} alignItems="center">
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                         <EditButton onClick={() => handleOpenModal(row.index)} />
                         <ParametersButton onClick={() => handleOpenParametrosModal(row.index)} />
                         <DeleteButton onClick={() => handleOpenDeleteModal(zonas[row.index].id)} />
@@ -488,7 +488,7 @@ const ZonaCultivo = () => {
                         Agregar Zona de Cultivo
                     </MuiButton>
 
-                    <TableContainer component={Paper}>
+                    <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
                         <Table>
                             <TableHead>
                                 {table.getHeaderGroups().map(headerGroup => (
@@ -601,7 +601,7 @@ const ZonaCultivo = () => {
                             : 'Configurar Parámetros'}
                     </Typography>
                     <form onSubmit={parametrosFormik.handleSubmit}>
-                        <Grid container spacing={3}>
+                        <Grid container spacing={2}>
                             {[
                                 { label: 'Acidez Mínima (pH)', name: 'acidez_min', min: 0, max: 14, step: 0.1 },
                                 { label: 'Acidez Máxima (pH)', name: 'acidez_max', min: 0, max: 14, step: 0.1 },
@@ -700,12 +700,16 @@ const modalStyle = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '80%',
-    maxWidth: '600px',
+    width: '90%', // Más pequeño en móviles
+    maxWidth: '600px', // Máximo en pantallas grandes
     bgcolor: 'background.paper',
     boxShadow: 24,
     p: 4,
     borderRadius: 2,
+    '@media (max-width: 600px)': {
+        width: '100%',
+        padding: '10px',
+    }
 };
 
 export default ZonaCultivo;
