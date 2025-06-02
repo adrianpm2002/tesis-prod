@@ -13,7 +13,7 @@ const greenColors = [
 
 const SamplePage = () => {
     const { zonas, loading } = useZonas();
-    console.log("Zonas disponibles:", zonas);
+    
 
 
     if (loading) {
@@ -47,7 +47,7 @@ const SamplePage = () => {
             fechaSiembra: fechaSiembra.toLocaleDateString()
         };
     
-        console.log("Información del cultivo:", cultivoInfo); // Verifica qué datos está generando
+        
     
         return cultivoInfo;
     };
@@ -141,7 +141,7 @@ zonas.forEach(zona => {
 
     // Componente para renderizar cuadrantes
     const renderQuadrant = (quadrant, index, size) => {
-        console.log("Datos del cuadrante en Tooltip:", quadrant); // Verifica la info
+        
     
         const cultivoInfo = quadrant ? getCultivoInfo(quadrant) : null;
         return (
