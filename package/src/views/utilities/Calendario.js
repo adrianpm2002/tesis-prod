@@ -26,13 +26,6 @@ import { useActivities } from '../../context/ActivitiesContext';
 import { activitiesService } from '../../services/activitiesService';
 
 
-
-
-
-
-
-
-
 // Iconos SVG personalizados
 const AutoIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="#42a5f5">
@@ -222,6 +215,9 @@ export default function Calendario() {
   };
 
   const handleGuardarActividad = async () => {
+    console.log('Hora seleccionada:', horaActividad);
+    
+
     const nuevaActividad = {
       date: selectedDate,
       hora: horaActividad,
@@ -232,11 +228,19 @@ export default function Calendario() {
       automatico
     };
 
+    console.log('Actividad enviada:', nuevaActividad);
+
     try {
+      
+
       await activitiesService.create(nuevaActividad); // 🚀 Guardar en la BD
       fetchActivities(zonaSeleccionada); // 🔄 Recargar actividades desde la API
       handleCloseModal(); // 🔄 Cerrar modal después de guardar
     } catch (error) {
+      if (!horaActividad) {
+        console.error("❌ Error: La hora de la actividad está vacía.");
+        return;
+    }
       console.error('Error al guardar actividad:', error);
     }
   };
@@ -568,7 +572,9 @@ if (fechaSiembra && fechaCosecha && fechaSiembra.getTime() < date.getTime() && d
             sx={{ mb: 2 }}
             InputLabelProps={{
               shrink: true,
+              
             }}
+            
           />
 
           {tipoSeleccionado?.requiereProducto && (
@@ -617,11 +623,16 @@ if (fechaSiembra && fechaCosecha && fechaSiembra.getTime() < date.getTime() && d
             }
           />
         </DialogContent>
+        
+
         <DialogActions>
+        
+        
           <Button onClick={handleCloseModal}>Cancelar</Button>
-          <Button
+          <Button 
             variant="contained"
-            onClick={handleGuardarActividad}
+            
+            onClick= {handleGuardarActividad}
             disabled={!tipoActividad || !actividad}
           >
             Guardar Actividad

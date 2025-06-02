@@ -23,11 +23,10 @@ const getActivitiesByZona = async (req, res) => {
 
 
 const createActivity = async (req, res) => {
-  const { date, zona_id, tipoActividad, descripcion, producto, automatico } = req.body;
+  const { date, hora, zona_id, tipoActividad, descripcion, producto, automatico } = req.body; // ✅ Agregar `hora`
 
   try {
-    // 🔎 Verificar si la actividad está dentro del ciclo de cultivo
-    const result = await pool.query('SELECT fechaCultivo, tiempoCultivo FROM zonas WHERE id = $1', [zona_id]);
+    const result = await pool.query('SELECT fecha_cultivo, tiempo_cultivo FROM zonas WHERE id = $1', [zona_id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Zona no encontrada' });
@@ -43,11 +42,11 @@ const createActivity = async (req, res) => {
       return res.status(400).json({ error: "Las actividades deben estar dentro del período de cultivo." });
     }
 
-    // 🚀 Insertar actividad si está dentro del período de cultivo
+    // ✅ Ahora `hora` está incluido en la inserción
     const insertResult = await pool.query(
-      `INSERT INTO actividades (date, zona_id, tipoActividad, descripcion, producto, automatico)
-      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [date, zona_id, tipoActividad, descripcion, producto, automatico]
+      `INSERT INTO actividades (date, hora, zona_id, tipoActividad, descripcion, producto, automatico)
+      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [date, hora, zona_id, tipoActividad, descripcion, producto, automatico]
     );
 
     res.status(201).json(insertResult.rows[0]);
@@ -56,6 +55,7 @@ const createActivity = async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
 
 
 
