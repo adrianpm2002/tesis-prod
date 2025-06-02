@@ -35,37 +35,44 @@ const Alarmas = () => {
     // ✅ Obtener solo las alertas activas
     fetch("http://localhost:3000/api/alertas")
         .then((res) => res.json())
-        .then((data) => {
-            console.log("Datos recibidos en frontend:", data);
-            if (Array.isArray(data)) {
-                setAlerts(data);
-            } else {
-                console.error("La API no devolvió un array:", data);
-                setAlerts([]);
-            }
-        })
-        .catch((err) => {
-            console.error("Error obteniendo alertas:", err);
-            setAlerts([]);
-        });
+        .then((data) => setAlerts(Array.isArray(data) ? data : []))
+        .catch((err) => console.error("Error obteniendo alertas:", err));
 
     // ✅ Obtener alertas archivadas
     fetch("http://localhost:3000/api/alertas-archivadas")
         .then((res) => res.json())
+        .then((data) => setArchivedAlerts(Array.isArray(data) ? data : []))
+        .catch((err) => console.error("Error obteniendo alertas archivadas:", err));
+
+    // ✅ Obtener actividades programadas para mañana y generar alertas automáticas
+    fetch("http://localhost:3000/api/actividades/proximas")
+
+        .then((res) => res.json())
         .then((data) => {
-            console.log("Alertas archivadas recibidas:", data);
+          console.log("Actividades próximas recibidas:", data);
             if (Array.isArray(data)) {
-                setArchivedAlerts(data);
+              const nuevasAlertas = data.map(act => ({
+                id: `temp-${act.id}`,
+                tipo: "Aviso de actividad",
+                zona_id: act.zona_id,
+                fecha: new Date().toISOString(),
+                descripcion: `Mañana se realizará: ${act.tipoactividad} en la zona ${getZonaNombre(act.zona_id)} a las ${act.hora}.`
+            }));
+
+                setAlerts(prevAlerts => {
+                    // ✅ Evita duplicados comparando descripción y zona_id
+                    const alertasFiltradas = nuevasAlertas.filter(nueva => 
+                        !prevAlerts.some(alerta => alerta.descripcion === nueva.descripcion && alerta.zona_id === nueva.zona_id)
+                    );
+                    return [...prevAlerts, ...alertasFiltradas];
+                });
             } else {
-                console.error("La API no devolvió un array de archivadas:", data);
-                setArchivedAlerts([]);
+                console.error("La API no devolvió actividades próximas:", data);
             }
         })
-        .catch((err) => {
-            console.error("Error obteniendo alertas archivadas:", err);
-            setArchivedAlerts([]);
-        });
+        .catch((err) => console.error("Error obteniendo actividades próximas:", err));
 }, []);
+
 
 
   const handleSearch = (event) => {

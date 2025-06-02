@@ -7,7 +7,8 @@ const sensorsRoutes = require('./routes/sensorsRoutes');
 const authRoutes = require('./routes/authRoutes'); // Importamos la ruta de autenticación
 const alertasRouter = require("./routes/alertas");
 const activitiesRoutes = require('./routes/activitiesRoutes');  // ✅ Importa las rutas de actividades
-
+const cron = require("node-cron");
+const { generarAlertasPorActividades } = require("./controllers/alertasController");
 const app = express();
 const PORT = 3000;
 
@@ -33,4 +34,10 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
+
+// ✅ Ejecutar la generación de alertas diariamente a medianoche
+cron.schedule("0 0 * * *", async () => {
+  console.log("🔄 Ejecutando la generación de alertas por actividades...");
+  await generarAlertasPorActividades();
 });

@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { getUpcomingActivities } = require("./activitiesController");
 
 // Función para obtener el último registro de sensores
 const obtenerUltimosValores = async () => {
@@ -111,6 +112,34 @@ const archivarAlerta = async (req, res) => {
     } catch (error) {
         console.error("❌ Error al archivar alerta:", error);
         res.status(500).json({ error: "Error al procesar la solicitud." });
+    }
+};
+
+const generarAlertasPorActividades = async () => {
+    try {
+        const actividadesProximas = await getUpcomingActivities();
+
+        for (const actividad of actividadesProximas) {
+            const descripcionAlerta = `Mañana se realizará: ${actividad.tipoActividad} en la zona ${actividad.zona_id} a las ${actividad.hora}.`;
+
+            // ✅ Verificar si la alerta ya existe para evitar duplicados
+            const existeAlerta = await pool.query(`
+                SELECT id FROM alertas 
+                WHERE zona_id = $1 AND tipo = 'Aviso de actividad' AND descripcion = $2
+            `, [actividad.zona_id, descripcionAlerta]);
+
+            if (existeAlerta.rows.length === 0) {
+                // ✅ Insertar nueva alerta si no existe
+                await pool.query(`
+                    INSERT INTO alertas (tipo, zona_id, fecha, descripcion) 
+                    VALUES ('Aviso de actividad', $1, $2, $3);
+                `, [actividad.zona_id, new Date().toISOString(), descripcionAlerta]);
+
+                console.log(`✅ Alerta generada: ${descripcionAlerta}`);
+            }
+        }
+    } catch (error) {
+        console.error("🚨 Error generando alertas por actividades:", error);
     }
 };
 

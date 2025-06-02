@@ -85,6 +85,26 @@ const deleteActivity = async (req, res) => {
   }
 };
 
-module.exports = { getActivitiesByZona, createActivity, deleteActivity };
+const getUpcomingActivities = async () => {
+  try {
+      const mañana = new Date();
+      mañana.setDate(mañana.getDate() + 1);
+      mañana.setHours(0, 0, 0, 0); // ✅ Resetea la hora para obtener todas las actividades del día
+
+      const result = await pool.query(`
+          SELECT * FROM actividades 
+          WHERE date = $1
+          ORDER BY hora ASC;
+      `, [mañana]);
+
+      return result.rows.length > 0 ? result.rows : [];
+  } catch (error) {
+      console.error("🚨 Error obteniendo actividades próximas:", error);
+      return [];
+  }
+};
+
+
+module.exports = { getActivitiesByZona, createActivity, deleteActivity, getUpcomingActivities };
 
 
