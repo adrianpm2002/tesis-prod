@@ -3,31 +3,54 @@ import { Box, AppBar, Toolbar, styled, Stack, IconButton, Badge, Popover, MenuIt
 import { IconBellRinging, IconMenu } from '@tabler/icons-react';
 import Profile from './user-profile';
 import PropTypes from 'prop-types';
-import { useUserContext } from '../../../context/userContext'; // Contexto del usuario
+import { useUserContext } from '../../../context/userContext';
 
 const Header = ({ toggleMobileSidebar }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
-  const { user } = useUserContext(); // Usa el contexto
+  const { user } = useUserContext();
 
-  // ✅ Obtener alertas desde el backend
   useEffect(() => {
-    fetch("http://localhost:3000/api/alertas")
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchAlerts = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/alertas");
+        const data = await res.json();
         if (Array.isArray(data)) {
-          // ✅ Filtrar solo las alertas NO archivadas
           const activeAlerts = data.filter(alert => !alert.archivada);
           setNotifications(activeAlerts);
         } else {
-          console.error("La API no devolvió un array:", data);
+          console.error("La API no devolvió un array de alertas:", data);
           setNotifications([]);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error obteniendo alertas:", err);
         setNotifications([]);
-      });
+      }
+    };
+
+    const fetchUpcomingActivities = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/actividades/proximas");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const activityAlerts = data.map(act => ({
+            id: `temp-${act.id}`,
+            tipo: "Aviso de actividad",
+            zona_id: act.zona_id,
+            fecha: new Date().toISOString(),
+            descripcion: `Mañana se realizará: ${act.tipoactividad} en la zona ${act.zona_id} a las ${act.hora}.`
+          }));
+          setNotifications(prev => [...prev, ...activityAlerts]);
+        } else {
+          console.error("La API no devolvió actividades próximas:", data);
+        }
+      } catch (err) {
+        console.error("Error obteniendo actividades próximas:", err);
+      }
+    };
+
+    fetchAlerts();
+    fetchUpcomingActivities();
   }, []);
 
   const handleNotificationClick = (event) => {
@@ -60,17 +83,12 @@ const Header = ({ toggleMobileSidebar }) => {
           color="inherit"
           aria-label="menu"
           onClick={toggleMobileSidebar}
-          sx={{
-            display: {
-              lg: "none",
-              xs: "inline",
-            },
-          }}
+          sx={{ display: { lg: "none", xs: "inline" } }}
         >
           <IconMenu width="20" height="20" />
         </IconButton>
 
-        {/* ✅ Notificaciones con cantidad de alertas no archivadas */}
+        {/* ✅ Icono de notificaciones con cantidad total de alertas */}
         <IconButton
           size="large"
           aria-label="show notifications"
@@ -83,7 +101,7 @@ const Header = ({ toggleMobileSidebar }) => {
           </Badge>
         </IconButton>
 
-        {/* ✅ Popover con alertas reales */}
+        {/* ✅ Popover con todas las alertas */}
         <Popover
           id="notifications-popover"
           anchorEl={anchorEl}
