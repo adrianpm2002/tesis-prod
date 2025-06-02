@@ -153,22 +153,85 @@ export default function TablaMensual() {
         handleCloseModal();
     };
 
+    const calcularEstadisticas = (data) => {
+        if (data.length === 0) return {};
+
+        const getPromedio = (key) => data.reduce((sum, item) => sum + (item[key] || 0), 0) / data.length;
+        const getMaximo = (key) => Math.max(...data.map(item => item[key] || 0));
+        const getMinimo = (key) => Math.min(...data.map(item => item[key] || 0));
+
+        return {
+            humedad: { promedio: getPromedio("humedad"), max: getMaximo("humedad"), min: getMinimo("humedad") },
+            temperatura: { promedio: getPromedio("temperatura_min"), max: getMaximo("temperatura_max"), min: getMinimo("temperatura_min") },
+            ph: { promedio: getPromedio("ph"), max: getMaximo("ph"), min: getMinimo("ph") },
+            radiacion: { promedio: getPromedio("radiacion"), max: getMaximo("radiacion"), min: getMinimo("radiacion") }
+        };
+    };
+
+    const agruparPorSemana = (data) => {
+        const semanas = {};
+        data.forEach(row => {
+            const semana = Math.ceil(new Date(row.fecha).getDate() / 7);
+            if (!semanas[semana]) semanas[semana] = { humedad: [], temperatura: [], ph: [], radiacion: [] };
+    
+            semanas[semana].humedad.push(row.humedad);
+            semanas[semana].temperatura.push(row.temperatura_min);
+            semanas[semana].ph.push(row.ph);
+            semanas[semana].radiacion.push(row.radiacion);
+        });
+    
+        return Object.keys(semanas).map(semana => ({
+            semana: `Semana ${semana}`,
+            humedad: semanas[semana].humedad.reduce((a, b) => a + b, 0) / semanas[semana].humedad.length,
+            temperatura: semanas[semana].temperatura.reduce((a, b) => a + b, 0) / semanas[semana].temperatura.length,
+            ph: semanas[semana].ph.reduce((a, b) => a + b, 0) / semanas[semana].ph.length,
+            radiacion: semanas[semana].radiacion.reduce((a, b) => a + b, 0) / semanas[semana].radiacion.length
+        }));
+    };
+    
+    const datosGrafico = agruparPorSemana(historicalData);
+
+    const estadisticas = calcularEstadisticas(historicalData);
+
     const exportPDF = () => {
         const doc = new jsPDF();
         doc.text("Reporte Mensual - Historial de Cultivo", 14, 20);
         doc.text(`Zona: ${selectedZone?.nombre || ''}`, 14, 30);
         doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 40);
+        doc.text("Tendencias del Mes", 14, 60);
+        doc.text(`Humedad: Promedio: ${estadisticas.humedad.promedio.toFixed(2)}% | Máx: ${estadisticas.humedad.max}% | Mín: ${estadisticas.humedad.min}%`, 14, 70);
+        doc.text(`Temperatura: Promedio: ${estadisticas.temperatura.promedio.toFixed(2)}°C | Máx: ${estadisticas.temperatura.max}°C | Mín: ${estadisticas.temperatura.min}°C`, 14, 80);
+        doc.text(`pH: Promedio: ${estadisticas.ph.promedio.toFixed(2)} | Máx: ${estadisticas.ph.max} | Mín: ${estadisticas.ph.min}`, 14, 90);
+        doc.text(`Radiación: Promedio: ${estadisticas.radiacion.promedio.toFixed(2)}W/m² | Máx: ${estadisticas.radiacion.max}W/m² | Mín: ${estadisticas.radiacion.min}W/m²`, 14, 100);
+
+
+        const formattedDate = (fecha) => {
+            const date = new Date(fecha);
+            return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+        };
 
         autoTable(doc, {
             startY: 50,
-            head: [["Fecha", "Humedad", "Temperatura", "pH", "Radiación", "Comentario"]],
+            head: [["Fecha", "Humedad", "Temperatura", "pH", "Radiación",]],
             body: historicalData.map(row => [
-                row.fecha,
+                formattedDate(row.fecha), // ✅ Usa la función para el nuevo formato
                 row.humedad,
-                row.temperatura,
+                `${row.temperatura_min ?? 'N/A'} - ${row.temperatura_max ?? 'N/A'}`,
                 row.ph,
                 row.radiacion,
-                row.comentario
+
+            ])
+        });
+
+        autoTable(doc, {
+            startY: 120,
+            head: [["Semana", "Humedad", "Temperatura", "pH", "Radiación"]],
+            body: datosGrafico.map(semana => [
+                semana.semana,
+                semana.humedad.toFixed(2),
+                semana.temperatura.toFixed(2),
+                semana.ph.toFixed(2),
+                semana.radiacion.toFixed(2)
             ])
         });
 
