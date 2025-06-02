@@ -9,20 +9,22 @@ import axios from 'axios';
 
 export default function TablaMensual() {
   const [historicalData, setHistoricalData] = useState([]);
+  const [latestSensorData, setLatestSensorData] = useState(null);
   const theme = useTheme();
   const primary = theme.palette.primary.main;
   const successlight = '#e8f5e9';
   const errorlight = '#ffcdd2';
 
+  // 📌 Obtener datos históricos
   useEffect(() => {
     const fetchDataForToday = async () => {
       try {
-        const today = new Date().toISOString().split('T')[0]; 
-        console.log("Obteniendo datos para:", today);
+        const now = new Date();
+        const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
+        
         const response = await axios.get(`http://localhost:5000/api/sensor-history/${today}`);
-        console.log("Datos de hoy:", response.data);
-
+        
         setHistoricalData(response.data);
       } catch (error) {
         console.error("Error al obtener datos del día actual:", error);
@@ -32,22 +34,48 @@ export default function TablaMensual() {
     fetchDataForToday();
   }, []);
 
-  // 📌 Extraer los datos del historial para el gráfico
-  const last7HoursData = historicalData.slice(-8, -1).map(dato => Math.round(parseFloat(dato.temperatura)));
-  const categories = historicalData.slice(-8).map(dato => `${dato.hora}:00`);
-  
-  // 📌 Obtener el valor en tiempo real
-  const currentTemperature = historicalData.length > 0
-    ? Math.round(parseFloat(historicalData[historicalData.length - 1].temperatura))
-    : "Cargando...";
+  // 📌 Obtener el último dato del sensor en tiempo real
+  useEffect(() => {
+    const fetchLatestSensorData = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/sensor-latest');
+        
+        setLatestSensorData(response.data);
+      } catch (error) {
+        console.error("Error al obtener el último valor del sensor:", error);
+      }
+    };
 
-  // ✅ Asegurar que la última hora refleje el dato real, no un promedio
-  if (historicalData.length > 0) {
-    last7HoursData.push(currentTemperature);
-    categories.push(`${new Date().getHours()}:00`);
+    fetchLatestSensorData();
+    const interval = setInterval(fetchLatestSensorData, 5000); // Actualiza cada 5 segundos
+
+    return () => clearInterval(interval); // Limpia el intervalo al desmontar el componente
+  }, []);
+
+  // 📌 Obtener las últimas 6 horas de datos promediados
+  let processedHistoricalData = historicalData.slice(-6).map(dato =>
+    dato.temperatura ? Math.round(parseFloat(dato.temperatura)) : 0
+  );
+
+  let processedCategories = historicalData.slice(-6).map(dato => `${dato.hora}:00`);
+
+  // 📌 Validar el dato en tiempo real antes de agregarlo al gráfico
+  const currentTemperature = latestSensorData && latestSensorData.temperatura !== undefined
+    ? Math.round(parseFloat(latestSensorData.temperatura))
+    : null;
+
+  // ✅ Agregar el último dato sin promedios
+  if (currentTemperature !== null && !isNaN(currentTemperature)) {
+    processedHistoricalData[processedHistoricalData.length - 1] = currentTemperature; // Reemplaza el promedio con el dato real
   }
 
-  const variation = calculateVariation(last7HoursData);
+  if (processedCategories[processedCategories.length - 1] !== `${new Date().getHours()}:00`) {
+    processedCategories[processedCategories.length - 1] = `${new Date().getHours()}:00`; // Reemplaza la hora duplicada
+  }
+
+  
+
+  const variation = calculateVariation(processedHistoricalData);
 
   // 📌 Configuración del gráfico con diseño `area`
   const optionscolumnchart = {
@@ -75,13 +103,13 @@ export default function TablaMensual() {
       strokeWidth: 2,
     },
     tooltip: { theme: theme.palette.mode === 'dark' ? 'dark' : 'light', x: { format: 'HH:mm' } },
-    xaxis: { categories: categories, labels: { style: { colors: '#adb0bb' } } },
+    xaxis: { categories: processedCategories, labels: { style: { colors: '#adb0bb' } } },
     yaxis: { labels: { style: { colors: '#adb0bb' } } },
     grid: { show: true, borderColor: '#f1f1f1', strokeDashArray: 3 },
   };
 
   const seriescolumnchart = [
-    { name: 'Temperatura (°C)', color: primary, data: last7HoursData },
+    { name: 'Temperatura (°C)', color: primary, data: processedHistoricalData },
   ];
 
   return (
@@ -122,4 +150,5 @@ function calculateVariation(data) {
   if (data.length < 2) return 0;
   return (data[data.length - 1] - data[data.length - 2]).toFixed(2);
 }
+
 

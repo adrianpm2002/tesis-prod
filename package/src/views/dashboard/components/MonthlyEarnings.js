@@ -1,27 +1,28 @@
-import React, { useState, useMemo } from 'react';
-import {
-  Typography,
-} from '@mui/material';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
+import { Typography } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import DashboardCard from '../../../components/shared/DashboardCard';
-import { useEffect } from 'react';
-import axios from 'axios';
 import Chart from 'react-apexcharts';
+import axios from 'axios';
 
 export default function TablaMensual() {
   const [historicalData, setHistoricalData] = useState([]);
+  const [latestSensorData, setLatestSensorData] = useState(null);
   const [chartBackgroundColor, setChartBackgroundColor] = useState('#ffffff');
+  const theme = useTheme();
 
+  // 📌 Obtener datos históricos
   useEffect(() => {
     const fetchDataForToday = async () => {
       try {
-        const today = new Date().toISOString().split('T')[0]; // 📌 Obtiene la fecha actual
-        console.log("Obteniendo datos para:", today);
+        const now = new Date();
+        const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+          .toISOString().split('T')[0];
 
+        
         const response = await axios.get(`http://localhost:5000/api/sensor-history/${today}`);
-        console.log("Datos de hoy:", response.data);
-
+        
         setHistoricalData(response.data);
       } catch (error) {
         console.error("Error al obtener datos del día actual:", error);
@@ -31,78 +32,97 @@ export default function TablaMensual() {
     fetchDataForToday();
   }, []);
 
+  // 📌 Obtener el último dato del sensor en tiempo real
+  useEffect(() => {
+    const fetchLatestSensorData = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/sensor-latest');
+        
+        setLatestSensorData(response.data);
+      } catch (error) {
+        console.error("Error al obtener el último valor del sensor:", error);
+      }
+    };
+
+    fetchLatestSensorData();
+    const interval = setInterval(fetchLatestSensorData, 5000); // Actualiza cada 5 segundos
+
+    return () => clearInterval(interval); // Limpia el intervalo al desmontar el componente
+  }, []);
+
+  // 📌 Obtener las últimas 6 horas de datos promediados
+  let processedHistoricalData = historicalData.slice(-6).map(dato =>
+    dato.humedad ? Math.round(parseFloat(dato.humedad)) : 0
+  );
+
+  let processedCategories = historicalData.slice(-6).map(dato => `${dato.hora}:00`);
+
+  // 📌 Validar el dato en tiempo real antes de agregarlo al gráfico
+  const currentHumidity = latestSensorData && latestSensorData.humedad !== undefined
+    ? Math.round(parseFloat(latestSensorData.humedad))
+    : null;
+
+  // ✅ Agregar el último dato sin promedios
+  if (currentHumidity !== null && !isNaN(currentHumidity)) {
+    processedHistoricalData[processedHistoricalData.length - 1] = currentHumidity; // Reemplaza el promedio con el dato real
+  }
+
+  if (processedCategories[processedCategories.length - 1] !== `${new Date().getHours()}:00`) {
+    processedCategories[processedCategories.length - 1] = `${new Date().getHours()}:00`; // Reemplaza la hora duplicada
+  }
+
+  
+
   // 📌 Determinar el color de fondo basado en la humedad más reciente
   useEffect(() => {
-    if (historicalData.length > 0) {
-      const humedadActual = parseFloat(historicalData[historicalData.length - 1].humedad);
+    if (currentHumidity !== null) {
       let color;
-      if (humedadActual >= 0 && humedadActual <= 20) {
+      if (currentHumidity >= 0 && currentHumidity <= 20) {
         color = '#5a3a32';
-      } else if (humedadActual >= 21 && humedadActual <= 40) {
+      } else if (currentHumidity >= 21 && currentHumidity <= 40) {
         color = '#b67636';
-      } else if (humedadActual >= 41 && humedadActual <= 60) {
+      } else if (currentHumidity >= 41 && currentHumidity <= 60) {
         color = '#cfae7f';
-      } else if (humedadActual >= 61 && humedadActual <= 80) {
+      } else if (currentHumidity >= 61 && currentHumidity <= 80) {
         color = '#e9eced';
-      } else if (humedadActual >= 81 && humedadActual <= 100) {
+      } else if (currentHumidity >= 81 && currentHumidity <= 100) {
         color = '#53525d';
       } else {
         color = '#ffffff';
       }
       setChartBackgroundColor(`linear-gradient(to bottom, ${color}, #ffffff)`);
     }
-  }, [historicalData]);
+  }, [currentHumidity]);
 
-  // 📌 Extraer los datos del historial para el gráfico
-  const last8HoursData = historicalData.slice(-8).map(dato => Math.round(parseFloat(dato.humedad)));
-  const categories = historicalData.slice(-8).map(dato => `${dato.hora}:00`);
-  const currentHumidity = historicalData.length > 0
-    ? Math.round(parseFloat(historicalData[historicalData.length - 1].humedad))
-    : "Cargando...";
+  const variation = calculateVariation(processedHistoricalData);
 
-  // 📌 Configuración del gráfico con estilos visuales de `MonthlyEarnings`
-  const theme = useTheme();
+  // 📌 Configuración del gráfico con estilos visuales
   const optionscolumnchart = {
     chart: {
       type: 'line',
       fontFamily: "'Plus Jakarta Sans', sans-serif;",
       foreColor: '#adb0bb',
-      toolbar: {
-        show: true,
-      },
+      toolbar: { show: true },
       height: 370,
       background: chartBackgroundColor,
     },
     colors: [theme.palette.primary.main, theme.palette.secondary.main],
     stroke: {
-      show: true,
       curve: 'smooth',
       width: 2,
       lineCap: "butt",
     },
-    dataLabels: {
-      enabled: false,
-    },
-    legend: {
-      show: true,
-    },
+    dataLabels: { enabled: false },
+    legend: { show: true },
     grid: {
       borderColor: 'rgba(0,0,0,0.1)',
       strokeDashArray: 3,
-      xaxis: {
-        lines: {
-          show: false,
-        },
-      },
+      xaxis: { lines: { show: false } },
     },
-    yaxis: {
-      tickAmount: 4,
-    },
+    yaxis: { tickAmount: 4 },
     xaxis: {
-      categories: categories,
-      axisBorder: {
-        show: false,
-      },
+      categories: processedCategories,
+      axisBorder: { show: false },
     },
     tooltip: {
       theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
@@ -113,7 +133,7 @@ export default function TablaMensual() {
   const seriescolumnchart = [
     {
       name: 'Humedad por horas (%)',
-      data: last8HoursData,
+      data: processedHistoricalData,
     }
   ];
 
@@ -127,4 +147,10 @@ export default function TablaMensual() {
       </DashboardCard>
     </PageContainer>
   );
+}
+
+// 📌 Función para calcular la variación en la última hora
+function calculateVariation(data) {
+  if (data.length < 2) return 0;
+  return (data[data.length - 1] - data[data.length - 2]).toFixed(2);
 }

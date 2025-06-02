@@ -81,6 +81,27 @@ router.get('/api/sensor-history/:fecha', async (req, res) => {
     }
 });
 
+router.get('/api/sensor-latest', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT humedad, temperatura, ph, radiacionSolar, timestamp
+            FROM sensor_data
+            ORDER BY timestamp DESC
+            LIMIT 1;
+        `);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "No hay datos recientes disponibles." });
+        }
+
+        res.json(result.rows[0]); // Envía el último dato registrado
+    } catch (error) {
+        console.error("Error al obtener el último valor del sensor:", error);
+        res.status(500).json({ error: "Error al procesar datos" });
+    }
+});
+
+
 
 
 

@@ -9,17 +9,20 @@ import axios from 'axios';
 
 export default function TablaMensual() {
   const [historicalData, setHistoricalData] = useState([]);
-  const [chartBackgroundColor, setChartBackgroundColor] = useState('#ffffff');
+  const [latestSensorData, setLatestSensorData] = useState(null);
+  const theme = useTheme();
 
+  // 📌 Obtener datos históricos
   useEffect(() => {
     const fetchDataForToday = async () => {
       try {
-        const today = new Date().toISOString().split('T')[0]; // 📌 Obtiene la fecha actual
-        console.log("Obteniendo datos para:", today);
+        const now = new Date();
+        const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+          .toISOString().split('T')[0];
 
+        
         const response = await axios.get(`http://localhost:5000/api/sensor-history/${today}`);
-        console.log("Datos de hoy:", response.data);
-
+        
         setHistoricalData(response.data);
       } catch (error) {
         console.error("Error al obtener datos del día actual:", error);
@@ -29,29 +32,53 @@ export default function TablaMensual() {
     fetchDataForToday();
   }, []);
 
-  // 📌 Extraer los datos del historial para el gráfico
-  const last7HoursData = historicalData.slice(-8, -1).map(dato => Math.round(parseFloat(dato.radiacion)));
-  const categories = historicalData.slice(-8).map(dato => `${dato.hora}:00`);
-  const currentRadiation = historicalData.length > 0 
-    ? Math.round(parseFloat(historicalData[historicalData.length - 1].radiacion)) 
-    : "Cargando...";
+  // 📌 Obtener el último dato del sensor en tiempo real
+  useEffect(() => {
+    const fetchLatestSensorData = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/sensor-latest');
+        
+        setLatestSensorData(response.data);
+      } catch (error) {
+        console.error("Error al obtener el último valor del sensor:", error);
+      }
+    };
+
+    fetchLatestSensorData();
+    const interval = setInterval(fetchLatestSensorData, 5000); // Actualiza cada 5 segundos
+
+    return () => clearInterval(interval); // Limpia el intervalo al desmontar el componente
+  }, []);
+
+  // 📌 Obtener las últimas 6 horas de datos promediados
+  let processedHistoricalData = historicalData.slice(-6).map(dato =>
+    dato.radiacion ? Math.round(parseFloat(dato.radiacion)) : 0
+  );
+
+  let processedCategories = historicalData.slice(-6).map(dato => `${dato.hora}:00`);
+
+  // 📌 Validar el dato en tiempo real antes de agregarlo al gráfico
+  const currentRadiation = latestSensorData && latestSensorData.radiacionsolar !== undefined
+    ? Math.round(parseFloat(latestSensorData.radiacionsolar))
+    : null;
 
 
 
-  // ✅ Asegurar que la última hora refleje el dato real, no un promedio
-if (historicalData.length > 0) {
-  last7HoursData.push(currentRadiation);
-  categories.push(`${new Date().getHours()}:00`);
-}
 
-  const variation = calculateVariation(last7HoursData);
+  // ✅ Agregar el último dato sin promedios
+  if (currentRadiation !== null && !isNaN(currentRadiation)) {
+    processedHistoricalData[processedHistoricalData.length - 1] = currentRadiation; // Reemplaza el promedio con el dato real
+  }
 
-  const theme = useTheme();
-  const secondary = theme.palette.secondary.main;
-  const secondarylight = '#ffa726';
-  const successlight = '#e8f5e9';
+  if (processedCategories[processedCategories.length - 1] !== `${new Date().getHours()}:00`) {
+    processedCategories[processedCategories.length - 1] = `${new Date().getHours()}:00`; // Reemplaza la hora duplicada
+  }
 
-  // 📌 Configuración del gráfico con diseño `area`
+
+
+  const variation = calculateVariation(processedHistoricalData);
+
+  // 📌 Configuración del gráfico
   const optionscolumnchart = {
     chart: {
       type: 'area',
@@ -59,12 +86,11 @@ if (historicalData.length > 0) {
       foreColor: '#adb0bb',
       toolbar: { show: false },
       height: 200,
-      sparkline: { enabled: false },
     },
     stroke: {
       curve: 'smooth',
       width: 2,
-      colors: [secondary],
+      colors: [theme.palette.secondary.main],
     },
     fill: {
       type: 'gradient',
@@ -72,18 +98,18 @@ if (historicalData.length > 0) {
     },
     markers: {
       size: 4,
-      colors: [secondary],
-      strokeColors: secondary,
+      colors: [theme.palette.secondary.main],
+      strokeColors: theme.palette.secondary.main,
       strokeWidth: 2,
     },
-    tooltip: { theme: theme.palette.mode === 'dark' ? 'dark' : 'light', x: { format: 'HH:mm' } },
-    xaxis: { categories: categories, labels: { style: { colors: '#adb0bb' } } },
+    tooltip: { theme: theme.palette.mode === 'dark' ? 'dark' : 'light' },
+    xaxis: { categories: processedCategories, labels: { style: { colors: '#adb0bb' } } },
     yaxis: { labels: { style: { colors: '#adb0bb' } } },
     grid: { show: true, borderColor: '#f1f1f1', strokeDashArray: 3 },
   };
 
   const seriescolumnchart = [
-    { name: 'Radiación Solar (W/m²)', color: secondary, data: last7HoursData },
+    { name: 'Radiación Solar (W/m²)', color: theme.palette.secondary.main, data: processedHistoricalData },
   ];
 
   return (
@@ -99,7 +125,7 @@ if (historicalData.length > 0) {
             Radiación Solar Actual: {currentRadiation} W/m²
           </Typography>
           <Stack direction="row" spacing={1} my={2} alignItems="center">
-            <Avatar sx={{ bgcolor: successlight, width: 27, height: 27 }}>
+            <Avatar sx={{ bgcolor: '#e8f5e9', width: 27, height: 27 }}>
               {variation >= 0 ? (
                 <IconArrowUpRight width={20} color="#66BB6A" />
               ) : (
@@ -124,4 +150,5 @@ function calculateVariation(data) {
   if (data.length < 2) return 0;
   return (data[data.length - 1] - data[data.length - 2]).toFixed(2);
 }
+
 

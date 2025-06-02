@@ -7,18 +7,20 @@ import axios from 'axios';
 
 export default function TablaMensual() {
   const [historicalData, setHistoricalData] = useState([]);
+  const [latestSensorData, setLatestSensorData] = useState(null);
   const theme = useTheme();
   const primary = theme.palette.primary.main;
 
+  // 📌 Obtener datos históricos
   useEffect(() => {
     const fetchDataForToday = async () => {
       try {
-        const today = new Date().toISOString().split('T')[0]; 
-        console.log("Obteniendo datos para:", today);
+        const now = new Date();
+        const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
+        
         const response = await axios.get(`http://localhost:5000/api/sensor-history/${today}`);
-        console.log("Datos de hoy:", response.data);
-
+        
         setHistoricalData(response.data);
       } catch (error) {
         console.error("Error al obtener datos del día actual:", error);
@@ -28,20 +30,46 @@ export default function TablaMensual() {
     fetchDataForToday();
   }, []);
 
-  // 📌 Extraer los datos del historial para el gráfico
-  const last7HoursData = historicalData.slice(-8, -1).map(dato => parseFloat(dato.ph).toFixed(2));
-  const categories = historicalData.slice(-8).map(dato => `${dato.hora}:00`);
-  
-  // 📌 Obtener el valor en tiempo real
-  const currentPh = historicalData.length > 0
-    ? parseFloat(historicalData[historicalData.length - 1].ph).toFixed(2)
-    : "Cargando...";
+  // 📌 Obtener el último dato del sensor en tiempo real
+  useEffect(() => {
+    const fetchLatestSensorData = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/sensor-latest');
+        
+        setLatestSensorData(response.data);
+      } catch (error) {
+        console.error("Error al obtener el último valor del sensor:", error);
+      }
+    };
 
-  // ✅ Asegurar que la última hora refleje el dato real, no un promedio
-  if (historicalData.length > 0) {
-    last7HoursData.push(parseFloat(currentPh));
-    categories.push(`${new Date().getHours()}:00`);
+    fetchLatestSensorData();
+    const interval = setInterval(fetchLatestSensorData, 5000); // Actualiza cada 5 segundos
+
+    return () => clearInterval(interval); // Limpia el intervalo al desmontar el componente
+  }, []);
+
+  // 📌 Obtener las últimas 6 horas de datos promediados
+  let processedHistoricalData = historicalData.slice(-6).map(dato =>
+    dato.ph ? parseFloat(dato.ph).toFixed(2) : 0
+  );
+
+  let processedCategories = historicalData.slice(-6).map(dato => `${dato.hora}:00`);
+
+  // 📌 Validar el dato en tiempo real antes de agregarlo al gráfico
+  const currentPh = latestSensorData && latestSensorData.ph !== undefined
+    ? parseFloat(latestSensorData.ph).toFixed(2)
+    : null;
+
+  // ✅ Reemplazar el último promedio con el dato en tiempo real
+  if (currentPh !== null && !isNaN(currentPh)) {
+    processedHistoricalData[processedHistoricalData.length - 1] = currentPh;
   }
+
+  if (processedCategories[processedCategories.length - 1] !== `${new Date().getHours()}:00`) {
+    processedCategories[processedCategories.length - 1] = `${new Date().getHours()}:00`;
+  }
+
+  
 
   // 📌 Función para convertir el valor de pH (0 a 14) a un porcentaje (0 a 100)
   const pHToPercentage = (pHValue) => (pHValue / 14) * 100;
@@ -90,12 +118,12 @@ export default function TablaMensual() {
     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.3, stops: [0, 80, 100] } },
     markers: { size: 4, colors: [primary], strokeColors: primary, strokeWidth: 2 },
     tooltip: { theme: theme.palette.mode === 'dark' ? 'dark' : 'light', x: { format: 'HH:mm' } },
-    xaxis: { categories: categories, labels: { style: { colors: '#adb0bb' } } },
+    xaxis: { categories: processedCategories, labels: { style: { colors: '#adb0bb' } } },
     yaxis: { labels: { style: { colors: '#adb0bb' } } },
     grid: { show: true, borderColor: '#f1f1f1', strokeDashArray: 3 },
   };
 
-  const seriescolumnchart = [{ name: 'pH', color: primary, data: last7HoursData }];
+  const seriescolumnchart = [{ name: 'pH', color: primary, data: processedHistoricalData }];
 
   return (
     <DashboardCard
@@ -110,5 +138,3 @@ export default function TablaMensual() {
     </DashboardCard>
   );
 }
-
-
