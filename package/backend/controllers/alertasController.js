@@ -1,5 +1,8 @@
 const pool = require('../config/db');
 const { getUpcomingActivities } = require("./activitiesController");
+const { activarRiego, activarLuz } = require('../controllers/riegoController');
+
+
 
 // Función para obtener el último registro de sensores
 const obtenerUltimosValores = async () => {
@@ -17,8 +20,12 @@ const obtenerUltimosValores = async () => {
     }
 };
 
+let estadoRiegoActual = "OFF";
+let estadoLuzActual = "OFF";
+const horaActual = new Date().getHours();
 // Función para analizar los datos y registrar alertas
-const analizarYRegistrarAlerta = async (selectedZona, timestamp, sensorData) => {
+const analizarYRegistrarAlerta = async (serialPort, selectedZona, timestamp, sensorData) => {
+
     try {
         console.log(`🔎 Analizando alertas para la zona seleccionada: ${selectedZona}`);
 
@@ -27,6 +34,8 @@ const analizarYRegistrarAlerta = async (selectedZona, timestamp, sensorData) => 
             console.error(`❌ Zona con ID ${selectedZona} no encontrada`);
             return;
         }
+
+         
 
         const { humedad_min, humedad_max, temperatura_min, temperatura_max, radiacion_min, radiacion_max, acidez_min, acidez_max } = zona.rows[0];
 
@@ -45,14 +54,52 @@ const analizarYRegistrarAlerta = async (selectedZona, timestamp, sensorData) => 
                 zona_id: selectedZona,
                 descripcion: `Humedad ${sensorData.humedad} fuera del rango ${humedad_min} - ${humedad_max}`
             });
+
+            if (sensorData.humedad < humedad_min) {
+                console.log("🚨 Primera medición - Activando riego automático...");
+                activarRiego(serialPort, "ON");  // ✅ Verificar si esto se ejecuta
+            } else {
+                console.log("✅ Primera medición - Humedad adecuada, no se activa el riego.");
+                activarRiego(serialPort, "OFF");
+            }
+            
+
         }
-        if (sensorData.radiacionSolar < radiacion_min || sensorData.radiacionSolar > radiacion_max) {
-            alertas.push({
-                tipo: "Radiación fuera de rango",
-                zona_id: selectedZona,
-                descripcion: `Radiación ${sensorData.radiacionSolar} fuera del rango ${radiacion_min} - ${radiacion_max}`
-            });
+        //console.log(estadoLuzActual)
+        //console.log(horaActual)
+        if(horaActual >= 7 && horaActual <= 19){
+            if (sensorData.radiacionSolar < radiacion_min || sensorData.radiacionSolar > radiacion_max) {
+                alertas.push({
+                    tipo: "Radiación fuera de rango",
+                    zona_id: selectedZona,
+                    descripcion: `Radiación ${sensorData.radiacionSolar} fuera del rango ${radiacion_min} - ${radiacion_max}`
+                });
+        
+                /*if (sensorData.radiacionSolar < radiacion_min && estadoLuzActual !== "ON") {
+                    console.log("🚨 Activando Iluminacion automática...");
+                    activarLuz(serialPort, "ON");
+                    estadoLuzActual = "ON";
+                } else if(sensorData.radiacionSolar >= radiacion_min && estadoLuzActual == "ON") {  // ✅ Corrección aquí
+                    console.log("✅ Radiación adecuada, apagando iluminación artificial.");
+                    console.log("🛠 Enviando comando LUZ_OFF al puerto serial...");
+                    activarLuz(serialPort, "OFF");
+                    estadoLuzActual = "OFF";
+                }*/
+            }
         }
+        //else {
+            //if (estadoLuzActual !== "OFF") {
+                //console.log("🌙 Fuera de horario, apagando iluminación artificial...");
+                //activarLuz(serialPort, "OFF");
+                //estadoLuzActual = "OFF";
+           // }
+        //}
+
+        //console.log(estadoLuzActual);
+        
+
+
+
         if (sensorData.ph < acidez_min || sensorData.ph > acidez_max) {
             alertas.push({
                 tipo: "pH fuera de rango",

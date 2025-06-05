@@ -84,7 +84,7 @@ const Menuitems = [
   },
 
 
-  {
+  /*{
     navlabel: true,
     subheader: 'Auth',
   },
@@ -104,7 +104,7 @@ const Menuitems = [
     navlabel: true,
     subheader: 'Extra',
   },
-  /*{
+  {
     id: uniqueId(),
     title: 'Icons',
     icon: IconMoodHappy,

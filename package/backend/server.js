@@ -5,6 +5,9 @@ const { ReadlineParser } = require('@serialport/parser-readline');
 const dataSensorRoutes = require('../backend/routes/dataSensorRoutes');
 const { analizarYRegistrarAlerta } = require('../backend/controllers/alertasController');
 const pool = require('./config/db');
+const { activarRiego, activarLuz } = require('./controllers/riegoController');  // Nueva importación
+
+
 
 const app = express();
 const port = 5000;
@@ -33,11 +36,19 @@ serialPort.open((err) => {
     if (err) {
         console.error("❌ Error al abrir el puerto serial:", err.message);
         sensoresConectados = false;
+
+        // 🔄 Intentar abrir el puerto nuevamente después de 5 segundos
+        setTimeout(() => {
+            console.log("🔄 Reintentando apertura del puerto serial...");
+            serialPort.open();
+        }, 5000);
     } else {
         console.log("✅ Puerto serial abierto correctamente.");
         sensoresConectados = true;
     }
 });
+
+
 
 // 📌 Ruta para actualizar la zona seleccionada
 app.post('/api/selected-zone', (req, res) => {
@@ -61,15 +72,22 @@ app.post('/api/selected-zone', (req, res) => {
 // 📌 Escuchar los datos del puerto serial
 parser.on('data', async (data) => {
     try {
+        console.log(`🔍 RAW DATA RECIBIDA: ${data}`);  // ✅ Ver qué está llegando desde Arduino
+
+        // 📌 Filtrar mensajes de estado que Arduino envía sobre la bomba
+        if (data.includes("Bomba activada") || data.includes("Bomba apagada")) {
+            console.log("⚠ Mensaje de estado recibido desde Arduino. Ignorando...");
+            return;  // 🔄 Evitar que estos mensajes se procesen como datos de sensores
+        }
+
         const values = data.split('|').map((val) => parseFloat(val.trim().split(':')[1]));
 
-        // ✅ Detectar si los valores son válidos antes de procesar
         if (values.some(val => isNaN(val))) {
-            console.error("⚠ Error en datos del sensor, posible desconexión.");
-            sensoresConectados = false;
+            console.warn("⚠ Advertencia: Se detectaron valores inválidos. Ignorando esta lectura...");
             return;
         }
 
+        sensoresConectados = true;
         sensorData = {
             humedad: values[0],
             temperatura: values[1],
@@ -77,7 +95,7 @@ parser.on('data', async (data) => {
             ph: values[3],
         };
 
-        console.log("📊 Datos recibidos:", sensorData);
+        console.log("📊 Datos recibidos y procesados:", sensorData);
 
         // ✅ Guardar los datos en PostgreSQL
         const result = await pool.query(
@@ -86,18 +104,19 @@ parser.on('data', async (data) => {
         );
 
         console.log("✅ Datos almacenados en PostgreSQL:", result.rows[0]);
-        sensoresConectados = true; // ✅ Confirma que los sensores están activos
 
         // ✅ Obtener la zona seleccionada y registrar alertas
-        const zonaSeleccionada = global.selectedZona || 15;
+        const zonaSeleccionada = global.selectedZona || 2;
         console.log(`🌍 Zona seleccionada en el Dashboard: ${zonaSeleccionada}`);
 
-        await analizarYRegistrarAlerta(zonaSeleccionada, result.rows[0].timestamp, sensorData);
+        await analizarYRegistrarAlerta(serialPort, zonaSeleccionada, result.rows[0].timestamp, sensorData);
+
     } catch (error) {
-        console.error("❌ Error al almacenar datos en PostgreSQL:", error);
-        sensoresConectados = false;
+        console.error("❌ Error inesperado al procesar datos:", error);
     }
 });
+
+
 
 // 📌 Nueva ruta para verificar si los sensores están conectados
 app.get('/api/sensores-estado', (req, res) => {
@@ -114,3 +133,43 @@ console.log("📢 Rutas cargadas en el servidor:", app._router.stack.map(layer =
 app.listen(port, () => {
     console.log(`🚀 Servidor Node.js corriendo en http://localhost:${port}`);
 });
+
+let estadoRiegoActual = "OFF";  // 📌 Variable para evitar activaciones repetitivas
+
+app.post('/api/activar-riego', (req, res) => {
+    const { estado } = req.body;  // "ON" o "OFF"
+
+    if (!["ON", "OFF"].includes(estado)) {
+        return res.status(400).json({ error: "Estado inválido para riego." });
+    }
+
+    if (estado !== estadoRiegoActual) {
+        activarRiego(serialPort, estado);
+        estadoRiegoActual = estado;  // ✅ Actualizar estado solo si cambia
+        res.json({ message: `Riego ${estado} correctamente.` });
+    } else {
+        res.json({ message: `El riego ya estaba en estado ${estado}. No se ha enviado el comando nuevamente.` });
+    }
+});
+
+/*et estadoLuzActual = "OFF";  // 📌 Variable para evitar activaciones repetitivas
+
+app.post('/api/activar-luz', (req, res) => {
+    const { estado } = req.body;  // "ON" o "OFF"
+
+    if (!["ON", "OFF"].includes(estado)) {
+        return res.status(400).json({ error: "Estado inválido para iluminacion." });
+    }
+
+    if (estado !== estadoLuzActual) {
+        activarLuz(serialPort, estado);
+        estadoLuzActual = estado;  // ✅ Actualizar estado solo si cambia
+        res.json({ message: `Iluminacion ${estado} correctamente.` });
+    } else {
+        res.json({ message: `La Iluminacion ya estaba en estado ${estado}. No se ha enviado el comando nuevamente.` });
+    }
+});*/
+
+
+
+
