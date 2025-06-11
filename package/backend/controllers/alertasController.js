@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 const { getUpcomingActivities } = require("./activitiesController");
-const { activarRiego, activarLuz } = require('../controllers/riegoController');
+const { activarRiego} = require('../controllers/riegoController');
 
 
 

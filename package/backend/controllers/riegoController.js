@@ -16,5 +16,5 @@ const activarRiego = (serialPort, estado) => {
         console.log("✅ Apagando Iluminacion automático...");
         serialPort.write("LUZ_OFF\n");
     }
-};
-module.exports = { activarRiego , activarLuz };*/
+};*/
+module.exports = { activarRiego };

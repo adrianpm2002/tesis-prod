@@ -5,7 +5,7 @@ const { ReadlineParser } = require('@serialport/parser-readline');
 const dataSensorRoutes = require('../backend/routes/dataSensorRoutes');
 const { analizarYRegistrarAlerta } = require('../backend/controllers/alertasController');
 const pool = require('./config/db');
-const { activarRiego, activarLuz } = require('./controllers/riegoController');  // Nueva importación
+const { activarRiego} = require('./controllers/riegoController');  // Nueva importación
 
 
 
