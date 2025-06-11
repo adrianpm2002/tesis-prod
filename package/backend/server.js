@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { SerialPort } = require('serialport');
@@ -5,6 +6,7 @@ const { ReadlineParser } = require('@serialport/parser-readline');
 const dataSensorRoutes = require('../backend/routes/dataSensorRoutes');
 const { analizarYRegistrarAlerta } = require('../backend/controllers/alertasController');
 const pool = require('./config/db');
+
 const { activarRiego} = require('./controllers/riegoController');  // Nueva importación
 
 
@@ -32,21 +34,31 @@ let sensorData = {
 };
 
 // 📌 Intentar abrir el puerto serial y manejar errores
-serialPort.open((err) => {
-    if (err) {
-        console.error("❌ Error al abrir el puerto serial:", err.message);
-        sensoresConectados = false;
+let reintentos = 0;
+const MAX_REINTENTOS = 5;
 
-        // 🔄 Intentar abrir el puerto nuevamente después de 5 segundos
-        setTimeout(() => {
-            console.log("🔄 Reintentando apertura del puerto serial...");
-            serialPort.open();
-        }, 5000);
-    } else {
-        console.log("✅ Puerto serial abierto correctamente.");
-        sensoresConectados = true;
-    }
-});
+function abrirPuerto() {
+    serialPort.open((err) => {
+        if (err) {
+            console.error("❌ Error al abrir el puerto serial:", err.message);
+            sensoresConectados = false;
+
+            if (reintentos < MAX_REINTENTOS) {
+                reintentos++;
+                console.log(`🔁 Reintento ${reintentos}/${MAX_REINTENTOS}...`);
+                setTimeout(abrirPuerto, 5000);
+            } else {
+                console.error("🚨 No se pudo abrir el puerto serial después de varios intentos.");
+            }
+        } else {
+            console.log("✅ Puerto serial abierto correctamente.");
+            sensoresConectados = true;
+            reintentos = 0; // Resetear si se abre con éxito
+        }
+    });
+}
+
+abrirPuerto();
 
 
 

@@ -39,5 +39,9 @@ app.listen(PORT, () => {
 // ✅ Ejecutar la generación de alertas diariamente a medianoche
 cron.schedule("0 0 * * *", async () => {
   console.log("🔄 Ejecutando la generación de alertas por actividades...");
-  await generarAlertasPorActividades();
+  try {
+    await generarAlertasPorActividades();
+  } catch (error) {
+    console.error("❌ Error al generar alertas:", error);
+  }
 });
