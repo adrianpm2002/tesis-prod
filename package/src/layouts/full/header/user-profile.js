@@ -44,7 +44,21 @@ const Profile = () => {
           <ListItemText>Mi perfil</ListItemText>
         </MenuItem>
         <Box mt={1} py={1} px={2}>
-          <Button to="/auth/login" variant="outlined" color="primary" component={Link} fullWidth>
+          <Button
+            variant="outlined"
+            color="primary"
+            fullWidth
+            onClick={() => {
+              localStorage.removeItem('token'); // ✅ elimina el token
+              localStorage.removeItem('user');  // ✅ elimina los datos del usuario
+
+              // Opcional: si usas un contexto global, resetea el usuario también
+              // setUser(null);
+
+              // Redirige al login
+              window.location.href = "/auth/login"; // 🔄 recarga para limpiar cualquier estado
+            }}
+          >
             Cerrar Sesión
           </Button>
         </Box>

@@ -91,23 +91,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
                     />
                 </Box>
                 <Stack justifyContent="space-between" direction="row" alignItems="center" my={2}>
-                    <FormGroup>
-                        <FormControlLabel
-                            control={<Checkbox defaultChecked />}
-                            label="Recordar Contraseña"
-                        />
-                    </FormGroup>
-                    <Typography
-                        component={Link}
-                        to="/recuperar-password"
-                        fontWeight="500"
-                        sx={{
-                            textDecoration: 'none',
-                            color: 'primary.main',
-                        }}
-                    >
-                        ¿Recuperar Contraseña?
-                    </Typography>
+                    
                 </Stack>
             </Stack>
 
