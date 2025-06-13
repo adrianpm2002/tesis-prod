@@ -16,10 +16,10 @@ const Error = () => (
         Opps!!!
       </Typography>
       <Typography align="center" variant="h4" mb={4}>
-        This page you are looking for could not be found.
+        No puedes axeder a esta seccion sin autenticarte
       </Typography>
       <Button color="primary" variant="contained" component={Link} to="/" disableElevation>
-        Go Back to Home
+        Volver a registro
       </Button>
     </Container>
   </Box>

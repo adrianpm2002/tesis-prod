@@ -1,8 +1,8 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import ZonaCultivo from './ZonaCult'; 
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import ZonaCultivo from './ZonaCult';
 import { useZonas } from '../../context/ZonaContext';
-import { vi } from 'vitest'; 
-import '@testing-library/jest-dom'; 
+import { vi } from 'vitest';
+import '@testing-library/jest-dom';
 
 vi.mock('../../context/ZonaContext', () => ({
   useZonas: vi.fn(),
@@ -10,95 +10,106 @@ vi.mock('../../context/ZonaContext', () => ({
 
 describe('ZonaCultivo Component', () => {
   const handleAddZoneMock = vi.fn();
+  const handleRemoveZoneMock = vi.fn();
+  const handleUpdateZoneMock = vi.fn();
+
+  const mockZonas = [
+    {
+      id: 1,
+      nombre: 'Cultivo 1',
+      cantidad_plantas: 10,
+      fecha_cultivo: '2024-12-31',
+      tiempo_cultivo: 30,
+      acidez_min: 5,
+      acidez_max: 7,
+      temperatura_min: 20,
+      temperatura_max: 30,
+      humedad_min: 40,
+      humedad_max: 60,
+      radiacion_min: 200,
+      radiacion_max: 800,
+    },
+  ];
 
   beforeEach(() => {
-    useZonas.mockReturnValue({ handleAddZone: handleAddZoneMock });
-    localStorage.clear(); // Limpiar localStorage antes de cada prueba
+    vi.clearAllMocks();
+    useZonas.mockReturnValue({
+      zonas: mockZonas,
+      handleAddZone: handleAddZoneMock,
+      handleRemoveZone: handleRemoveZoneMock,
+      handleUpdateZone: handleUpdateZoneMock,
+      error: null,
+    });
   });
 
-  test('debe renderizar correctamente el componente', () => {
+  test('renderiza correctamente el componente', () => {
     render(<ZonaCultivo />);
-    expect(screen.getByText(/Zona de Cultivo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Zonas de Cultivo/i)).toBeInTheDocument();
     expect(screen.getByText(/Agregar Zona de Cultivo/i)).toBeInTheDocument();
   });
 
-  test('debe agregar una nueva zona al hacer clic en el botón', () => {
+  test('permite agregar una nueva zona', async () => {
     render(<ZonaCultivo />);
-    const addButton = screen.getByText(/Agregar Zona de Cultivo/i);
-    fireEvent.click(addButton);
+    fireEvent.click(screen.getByText(/Agregar Zona de Cultivo/i));
 
-    // Verificar que se haya agregado una nueva zona
-    expect(screen.getByLabelText(/Nombre del Cultivo/i)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: 'Nuevo Cultivo' } });
+    fireEvent.change(screen.getByLabelText(/Cantidad de Plantas/i), { target: { value: 100 } });
+    fireEvent.change(screen.getByLabelText(/Fecha de Cultivo/i), { target: { value: '2025-06-01' } });
+    fireEvent.change(screen.getByLabelText(/Tiempo de Cultivo/i), { target: { value: 60 } });
+    fireEvent.click(screen.getByText(/Siguiente/i));
+
+    await waitFor(() => screen.getByLabelText(/Acidez Mínima/i));
+    fireEvent.change(screen.getByLabelText(/Acidez Mínima/i), { target: { value: 5 } });
+    fireEvent.change(screen.getByLabelText(/Acidez Máxima/i), { target: { value: 7 } });
+
+    fireEvent.click(screen.getByText(/Crear Zona/i));
+
+    await waitFor(() => {
+      expect(handleAddZoneMock).toHaveBeenCalled();
+    });
   });
 
-  test('debe eliminar una zona existente', () => {
-    const initialZones = [
-      {
-        id: 1,
-        nombre: 'Cultivo 1',
-        suelo: 'arena',
-        cantidadPlantas: '10',
-        acidezMin: '5',
-        acidezMax: '7',
-        temperaturaMin: '20',
-        temperaturaMax: '30',
-        humedadMin: '40',
-        humedadMax: '60',
-        riego: 'goteo',
-        insumos: 'fertilizante',
-        fechaCultivo: '2025-01-01',
-        tiempoCultivo: '30',
-      },
-    ];
-
-    localStorage.setItem('zonas', JSON.stringify(initialZones));
+  test('permite eliminar una zona existente', async () => {
     render(<ZonaCultivo />);
 
-    expect(screen.getByText(/Cultivo 1/i)).toBeInTheDocument();
-
-    const deleteButton = screen.getByText(/Eliminar/i);
+    // Asegúrate de tener aria-label="Eliminar zona" en tu componente
+    const deleteButton = screen.getByRole('button', { name: /eliminar zona/i });
     fireEvent.click(deleteButton);
+    screen.debug();
 
-    // Verificar que la zona ha sido eliminada
-    expect(screen.queryByText(/Cultivo 1/i)).not.toBeInTheDocument();
+    // Asegúrate de que el botón de confirmación tenga texto "Confirmar"
+    const confirmButton = await screen.findByRole('button', { name: /eliminar/i });
+fireEvent.click(confirmButton);
+
+
+    await waitFor(() => {
+      expect(handleRemoveZoneMock).toHaveBeenCalledWith(1);
+    });
   });
 
-  test('debe mostrar errores de validación al guardar una zona sin datos', () => {
+  test('muestra errores de validación si se guarda sin completar datos', async () => {
     render(<ZonaCultivo />);
-    const addButton = screen.getByText(/Agregar Zona de Cultivo/i);
-    fireEvent.click(addButton);
+    fireEvent.click(screen.getByText(/Agregar Zona de Cultivo/i));
+    fireEvent.click(screen.getByText(/Siguiente/i));
 
-    const saveButton = screen.getByText(/Guardar/i);
-    fireEvent.click(saveButton);
-
-    // Verificar que se muestran errores de validación
-    const errorMessages = screen.getAllByText(/Campo vacío/i);
-    expect(errorMessages.length).toBeGreaterThan(0); // Verifica que al menos un mensaje de error esté presente
+    await waitFor(() => {
+      expect(screen.getAllByText(/obligatorio/i).length).toBeGreaterThan(0);
+    });
   });
 
-  test('debe recuperar zonas del localStorage', () => {
-    const initialZones = [
-      {
-        id: 1,
-        nombre: 'Cultivo 1',
-        suelo: 'arena',
-        cantidadPlantas: '10',
-        acidezMin: '5',
-        acidezMax: '7',
-        temperaturaMin: '20',
-        temperaturaMax: '30',
-        humedadMin: '40',
-        humedadMax: '60',
-        riego: 'goteo',
-        insumos: 'fertilizante',
-        fechaCultivo: '2025-01-01',
-        tiempoCultivo: '30',
-      },
-    ];
-
-    localStorage.setItem('zonas', JSON.stringify(initialZones));
+  test('permite abrir el modal de edición', async () => {
     render(<ZonaCultivo />);
+    const editButtons = screen.getAllByRole('button');
+    const editButton = editButtons.find(btn => btn.classList.contains('edit-button'));
+    fireEvent.click(editButton);
 
+    await waitFor(() => {
+      expect(screen.getByDisplayValue(/Cultivo 1/i)).toBeInTheDocument();
+    });
+  });
+
+  test('muestra zonas existentes al renderizar', () => {
+    render(<ZonaCultivo />);
     expect(screen.getByText(/Cultivo 1/i)).toBeInTheDocument();
   });
 });
